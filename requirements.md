@@ -1,22 +1,30 @@
-Dance Manager System requirements - 
+# Dance Manager System Requirements
 
-Ability to import csv with one or more dance clases. Column title is class name, each student in the class is listed below the class name. 
+## Data Import
+- Import dance classes from CSV: column header is the class name, each row below it lists a student in that class
+- Import dance teams from CSV: column header is the team name, each row below it lists a dancer on that team
 
-Ability to import csv with one or more dance teams. Column title is team name, each student/dancer is listed under the team name. 
+## Dancers
+- Add individual dancers. Each dancer can be assigned to one team
 
-Ability to add an individual dancer. Each dancer can be assigned to one team. 
+## Classes
+- Add teams of dancers to one or more dance classes
+- Add individual dancers to each class, regardless of what team the dancer is on
 
-Ability to add team of dancers to one or more dance classes. 
+## Dances
+- Add dances that can include dance class members and/or individual dancers. Each dance has a song name and an optional instructor
 
-Ability to add individual dancers to each class regardless of what team the dancer is on
+## Instructors
+- Add instructors that can be assigned to lead a dance class and multiple dances
 
-Ability to add a Dance that can have dance class members or individuals assigned. Each dance will have a song name, and an optional instructor.
+## Recital Organization
+- Automatically identify which dancers are in what dance and produce a dance schedule that ensures each dancer has at least 4 dances between performances for costume changes
 
-Ability to add an instructor that can be assigned to lead a dance class and multiple dances 
+## Extensibility
+- Allow adding other dance studio management features (e.g., schedules for which class meets in which studio at which time). Do not flesh these features out or add specific stubs yet — keep the data structures and design patterns flexible for future adjustments
 
-Recital orginization features
-- Automatically identify which dancers are in what dance and produce a dance schedule that ensures each dancer has at least 4 dances between performances for costume changes. 
-
-Flexability to add other management features for a dance studio like creating schedules for what class meets in what studio at what time. Dont flesh these features out or add specific stubs yet just keep the data structures and design patterns flexible for adjustment.
-
-The application should be written in python. Data should be stored in a free easy to use data structure. Start with a command line interface that can later have a UI added. Most input and output will be csv format or text responses. 
+## Technical Requirements
+- Written in Python
+- Data stored in a simple, easy-to-use data structure (JSON)
+- Command-line interface to start; designed so a UI can be added later
+- Most input and output in CSV format or text responses
