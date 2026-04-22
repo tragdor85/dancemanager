@@ -61,13 +61,13 @@ def list_recitals(ctx):
         po = rec.get("performance_order", [])
         dances_count = len(po) if isinstance(po, list) else 0
         rows.append(
-             [
+            [
                 rid,
                 rec["name"],
                 dances_count,
                 rec.get("notes", ""),
-             ]
-         )
+            ]
+        )
 
     click.echo(render_table(headers, rows))
 
@@ -369,9 +369,7 @@ def _get_buffer_note(result, position, dancer_ids, dancer_dances):
             for i, pos in enumerate(positions):
                 if pos == position and i > 0:
                     gap = positions[i] - positions[i - 1] - 1
-                    notes.append(
-                        f"   ({dancer_id}: {gap} dance(s) buffer)"
-                    )
+                    notes.append(f"   ({dancer_id}: {gap} dance(s) buffer)")
         elif len(positions) == 1 and positions[0] == position:
             notes.append(f"   ({dancer_id}: 1st performance)")
     return "".join(notes)

@@ -16,7 +16,7 @@ from dancemanager.utils import get_store, render_table
 @click.option("--store-path", default=None, help="Path to store JSON file")
 @click.pass_context
 def cli(ctx, store_path):
-     """Dance Manager - CLI for managing a dance studio."""
+    """Dance Manager - CLI for managing a dance studio."""
     ctx.ensure_object(dict)
     ctx.obj["store_path"] = store_path
 

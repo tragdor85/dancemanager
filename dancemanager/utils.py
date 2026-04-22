@@ -40,9 +40,9 @@ def get_store(store_path: Optional[str] = None) -> DataStore:
                 return _store_instance
     if _store_instance is not None:
         return _store_instance
-    _store_instance = DataStore(path=store_path or str(
-        Path(__file__).parent.parent / "data" / "store.json"
-    ))
+    _store_instance = DataStore(
+        path=store_path or str(Path(__file__).parent.parent / "data" / "store.json")
+    )
     return _store_instance
 
 
@@ -230,7 +230,7 @@ def csv_import_dancers(store, filepath):
 
     with open(filepath) as fh:
         reader = csv.reader(fh)
-        next(reader)   # skip header row
+        next(reader)  # skip header row
         for row in reader:
             if not row or len(row) < 1:
                 summary["skipped"] += 1
