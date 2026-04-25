@@ -147,3 +147,15 @@ class DataStore:
         # Future migrations can be added here as needed.
         data["version"] = CURRENT_VERSION
         return data
+
+
+_store_cache: dict = {}
+
+
+def get_store(path=None):
+    """Get or create the store instance."""
+    if path is None:
+        path = str(Path(__file__).parent.parent / "data" / "store.json")
+    if path not in _store_cache:
+        _store_cache[path] = DataStore(path=path)
+    return _store_cache[path]

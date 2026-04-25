@@ -27,3 +27,20 @@ cli.add_command(dancers)
 cli.add_command(instructors)
 cli.add_command(dances)
 cli.add_command(recital)
+
+
+@cli.command()
+@click.option(
+    "--host", default="localhost", help="Host to bind to (default: localhost)"
+)
+@click.option(
+    "--port", default=8000, type=int, help="Port to listen on (default: 8000)"
+)
+def serve(host, port):
+    """Launch the web server."""
+    import uvicorn
+    from dancemanager.api import create_app
+
+    app = create_app()
+    click.echo(f"Starting Dance Manager web server on http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)
