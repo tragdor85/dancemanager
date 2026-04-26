@@ -54,29 +54,29 @@ class TestDancesList:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         store.set(
-               "dances",
-               "hiphop",
-               {
-                   "id": "hiphop",
-                   "name": "Hip Hop",
-                   "song_name": "Beat",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "hiphop",
+            {
+                "id": "hiphop",
+                "name": "Hip Hop",
+                "song_name": "Beat",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(dances, ["list"])
         assert result.exit_code == 0
@@ -92,17 +92,17 @@ class TestDancesShow:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(dances, ["show", "waltz"])
         assert result.exit_code == 0
@@ -125,17 +125,17 @@ class TestDancesRemove:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(dances, ["remove", "waltz"])
         assert result.exit_code == 0
@@ -158,17 +158,17 @@ class TestDancesDancerAdd:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(dances, ["dancer-add", "waltz", "alice"])
         assert result.exit_code == 0
@@ -191,17 +191,17 @@ class TestDancesDancerRemove:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": ["alice"],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": ["alice"],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(dances, ["dancer-remove", "waltz", "alice"])
         assert result.exit_code == 0
@@ -216,17 +216,17 @@ class TestDancesExport:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         filepath = str(tmp_path / "export.csv")
         result = runner.invoke(dances, ["export", "--filepath", filepath])

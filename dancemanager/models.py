@@ -8,14 +8,14 @@ from typing import Any, Dict
 
 DEFAULT_STORE_SCHEMA: Dict[str, Any] = {
     "version": "1.0.0",
-    "dancers": {},
-    "teams": {},
-    "classes": {},
-    "instructors": {},
-    "dances": {},
-    "recitals": {},
-    "schedules": {},
-    "studios": {},
+    "dancers": [],
+    "teams": [],
+    "classes": [],
+    "instructors": [],
+    "dances": [],
+    "recitals": [],
+    "schedules": [],
+    "studios": [],
 }
 
 

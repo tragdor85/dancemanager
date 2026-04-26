@@ -6,7 +6,7 @@ Provides commands to add, list, show, remove, assign, and export teams.
 import click
 
 from dancemanager.models import make_team_id
-from dancemanager.utils import get_store, render_table
+from dancemanager.utils import get_store
 
 
 @click.group()
@@ -27,52 +27,64 @@ def teams():
 def add(ctx, name, dancers):
     """Create a team with optional dancers."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
-    dancers_coll = store.get_collection("dancers")
+    teams_list = store.get_collection("teams")
+    dancers_list = store.get_collection("dancers")
 
     team_id = make_team_id(name)
-    if team_id in [t["id"] for t in teams_coll.values()]:
+    if team_id in teams_list:
         click.echo(f"Team already exists: {name}")
         return
 
-    teams_coll[team_id] = {
-        "id": team_id,
-        "name": name,
-        "dancer_ids": [],
-        "notes": "",
-    }
+    store.execute(
+        "INSERT OR REPLACE INTO teams (id, name, notes) VALUES (?, ?, ?)",
+        (team_id, name, ""),
+    )
 
     for d_name in dancers:
-        for did, d in dancers_coll.items():
+        for did, d in store.iterate("dancers"):
             if d["name"].lower() == d_name.lower():
-                teams_coll[team_id]["dancer_ids"].append(did)
-                d["team_id"] = team_id
-                break
+                store.execute(
+                    "INSERT OR IGNORE INTO class_dancer_assignments (class_id, dancer_id) "
+                    "SELECT id, ? FROM classes WHERE id = ?",
+                    (did, team_id),
+                )
+                store.execute(
+                    "INSERT OR IGNORE INTO dance_assignments (dance_id, dancer_id) "
+                    "SELECT id, ? FROM dances WHERE id = ?",
+                    (did, team_id),
+                )
+                store.execute(
+                    "UPDATE dancers SET team_id = ? WHERE id = ?",
+                    (team_id, did),
+                )
 
-    store.set_collection("teams", teams_coll)
-    store.set_collection("dancers", dancers_coll)
+    store.save()
     click.echo(f"Created team: {name} (ID: {team_id})")
 
 
 @teams.command("list")
 @click.pass_context
-def list(ctx):
+def list_teams(ctx):
     """List all teams."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
+    teams_list = store.get_collection("teams")
 
-    if not teams_coll:
+    if not teams_list:
         click.echo("No teams found.")
         return
 
-    headers = ["ID", "Name", "Dancer IDs", "Notes"]
+    headers = ["ID", "Name", "Dancer Count", "Notes"]
     rows = []
-    for tid, team in sorted(teams_coll.items(), key=lambda x: x[1]["name"]):
+    for tid, team in sorted(teams_list.items(), key=lambda x: x[1]["name"]):
+        dancer_count = store.execute(
+            "SELECT COUNT(*) FROM dancers WHERE team_id = ?",
+            (tid,),
+        )[0][0]
         rows.append(
             [
                 tid,
                 team["name"],
-                ";".join(team.get("dancer_ids", [])),
+                dancer_count,
                 team.get("notes", ""),
             ]
         )
@@ -86,11 +98,10 @@ def list(ctx):
 def show(ctx, team_id):
     """Show details for a single team."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
+    team = store.get("teams", team_id)
 
-    team = teams_coll.get(team_id)
     if team is None:
-        for tid, t in teams_coll.items():
+        for tid, t in store.iterate("teams"):
             if t["name"].lower() == team_id.lower():
                 team = t
                 break
@@ -99,7 +110,9 @@ def show(ctx, team_id):
             return
 
     click.echo(f"Name: {team['name']}")
-    click.echo(f"Dancer IDs: {', '.join(team.get('dancer_ids', []) or [])}")
+    click.echo(
+        f"Dancer Count: {store.execute('SELECT COUNT(*) FROM dancers WHERE team_id = ?', (team_id,))[0][0]}"
+    )
     click.echo(f"Notes: {team.get('notes', '')}")
 
 
@@ -109,11 +122,10 @@ def show(ctx, team_id):
 def remove(ctx, team_id):
     """Remove a team (does not remove dancers)."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
+    team = store.get("teams", team_id)
 
-    team = teams_coll.get(team_id)
     if team is None:
-        for tid, t in teams_coll.items():
+        for tid, t in store.iterate("teams"):
             if t["name"].lower() == team_id.lower():
                 team = t
                 break
@@ -121,8 +133,8 @@ def remove(ctx, team_id):
             click.echo(f"Team not found: {team_id}")
             return
 
-    del teams_coll[team_id]
-    store.set_collection("teams", teams_coll)
+    store.execute("DELETE FROM teams WHERE id = ?", (team_id,))
+    store.save()
     click.echo(f"Removed team: {team['name']}")
 
 
@@ -133,20 +145,22 @@ def remove(ctx, team_id):
 def assign(ctx, team_id, class_name):
     """Assign a team to a class."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
-    classes_coll = store.get_collection("classes")
+    teams_list = store.get_collection("teams")
+    classes_list = store.get_collection("classes")
 
-    team = teams_coll.get(team_id)
+    team = store.get("teams", team_id)
     if team is None:
         click.echo(f"Team not found: {team_id}")
         return
 
-    for cname, class_data in classes_coll.items():
+    for cname, class_data in classes_list.items():
         if class_data["name"].lower() == class_name.lower():
             cid = class_data["id"]
-            if team_id not in class_data.get("team_ids", []):
-                class_data["team_ids"].append(team_id)
-            store.set_collection("classes", classes_coll)
+            store.execute(
+                "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) "
+                "VALUES (?, ?)",
+                (cid, team_id),
+            )
             click.echo(f"Assigned team '{team['name']}' to class '{cname}'.")
             return
 
@@ -160,23 +174,22 @@ def assign(ctx, team_id, class_name):
 def dancer_add(ctx, team_id, dancer_id):
     """Add a dancer to a team."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
-    dancers_coll = store.get_collection("dancers")
+    teams_list = store.get_collection("teams")
+    dancers_list = store.get_collection("dancers")
 
-    team = teams_coll.get(team_id)
+    team = store.get("teams", team_id)
     if team is None:
         click.echo(f"Team not found: {team_id}")
         return
 
-    if dancer_id not in team["dancer_ids"]:
+    if dancer_id not in team.get("dancer_ids", []):
         team["dancer_ids"].append(dancer_id)
 
-    dancer = dancers_coll.get(dancer_id)
+    dancer = store.get("dancers", dancer_id)
     if dancer:
         dancer["team_id"] = team_id
 
-    store.set_collection("teams", teams_coll)
-    store.set_collection("dancers", dancers_coll)
+    store.save()
     click.echo(f"Added dancer {dancer_id} to team '{team['name']}'.")
 
 
@@ -187,10 +200,10 @@ def dancer_add(ctx, team_id, dancer_id):
 def dancer_remove(ctx, team_id, dancer_id):
     """Remove a dancer from a team."""
     store = get_store()
-    teams_coll = store.get_collection("teams")
-    dancers_coll = store.get_collection("dancers")
+    teams_list = store.get_collection("teams")
+    dancers_list = store.get_collection("dancers")
 
-    team = teams_coll.get(team_id)
+    team = store.get("teams", team_id)
     if team is None:
         click.echo(f"Team not found: {team_id}")
         return
@@ -198,12 +211,11 @@ def dancer_remove(ctx, team_id, dancer_id):
     if dancer_id in team["dancer_ids"]:
         team["dancer_ids"].remove(dancer_id)
 
-    dancer = dancers_coll.get(dancer_id)
+    dancer = store.get("dancers", dancer_id)
     if dancer and dancer.get("team_id") == team_id:
         dancer["team_id"] = None
 
-    store.set_collection("teams", teams_coll)
-    store.set_collection("dancers", dancers_coll)
+    store.save()
     click.echo(f"Removed dancer {dancer_id} from team '{team['name']}'.")
 
 

@@ -8,7 +8,7 @@ from typing import Optional
 import click
 
 from dancemanager.models import make_class_id
-from dancemanager.utils import get_store, render_table
+from dancemanager.utils import get_store
 
 
 @click.group()
@@ -28,60 +28,63 @@ def classes():
 def add(ctx, name, instructor):
     """Create a dance class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
+    classes_list = store.get_collection("classes")
 
     class_id = make_class_id(name)
-    if class_id in [c["id"] for c in classes_coll.values()]:
+    if class_id in classes_list:
         click.echo(f"Class already exists: {name}")
         return
 
-    classes_coll[class_id] = {
-        "id": class_id,
-        "name": name,
-        "team_ids": [],
-        "dancer_ids": [],
-        "instructor_id": None,
-        "notes": "",
-    }
+    store.execute(
+        "INSERT OR REPLACE INTO classes (id, name, instructor_id, notes) "
+        "VALUES (?, ?, ?, ?)",
+        (class_id, name, None, ""),
+    )
 
     if instructor:
-        instructors_coll = store.get_collection("instructors")
-        for iname, inst_data in instructors_coll.items():
-            if inst_data["name"].lower() == instructor.lower():
-                classes_coll[class_id]["instructor_id"] = iname
-                inst_data["class_ids"].append(class_id)
-                store.set_collection("instructors", instructors_coll)
-                break
+        cursor = store.execute(
+            "SELECT id FROM instructors WHERE LOWER(name) = ?",
+            (instructor.lower(),),
+        )
+        if cursor and cursor[0]:
+            instructor_id = cursor[0][0]
+            store.execute(
+                "UPDATE classes SET instructor_id = ? WHERE id = ?",
+                (instructor_id, class_id),
+            )
+            store.execute(
+                "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) "
+                "SELECT id, ? FROM teams WHERE id = ?",
+                (class_id, instructor_id),
+            )
         else:
             click.echo(
                 f"Warning: instructor '{instructor}' not found. "
                 "Assign later with 'instructor assign-class'."
             )
 
-    store.set_collection("classes", classes_coll)
+    store.save()
     click.echo(f"Created class: {name} (ID: {class_id})")
 
 
 @classes.command("list")
 @click.pass_context
-def list(ctx):
+def list_classes(ctx):
     """List all classes."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
+    classes_list = store.get_collection("classes")
 
-    if not classes_coll:
+    if not classes_list:
         click.echo("No classes found.")
         return
 
-    headers = ["ID", "Name", "Team IDs", "Dancer IDs", "Instructor ID", "Notes"]
+    headers = ["ID", "Name", "Instructor ID", "Notes"]
     rows = []
-    for cid, cls in sorted(classes_coll.items(), key=lambda x: x[1]["name"]):
+    for cid, cls in sorted(classes_list.items(), key=lambda x: x[1]["name"]):
         rows.append(
             [
                 cid,
                 cls["name"],
-                ";".join(cls.get("team_ids", [])),
-                ";".join(cls.get("dancer_ids", [])),
                 cls.get("instructor_id", "") or "",
                 cls.get("notes", ""),
             ]
@@ -96,11 +99,10 @@ def list(ctx):
 def show(ctx, class_id):
     """Show details for a single class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
+    cls = store.get("classes", class_id)
 
-    cls = classes_coll.get(class_id)
     if cls is None:
-        for cid, c in classes_coll.items():
+        for cid, c in store.iterate("classes"):
             if c["name"].lower() == class_id.lower():
                 cls = c
                 break
@@ -109,8 +111,6 @@ def show(ctx, class_id):
             return
 
     click.echo(f"Name: {cls['name']}")
-    click.echo(f"Team IDs: {', '.join(cls.get('team_ids', []) or [])}")
-    click.echo(f"Dancer IDs: {', '.join(cls.get('dancer_ids', []) or [])}")
     click.echo(f"Instructor ID: {cls.get('instructor_id', '') or 'None'}")
     click.echo(f"Notes: {cls.get('notes', '')}")
 
@@ -121,11 +121,10 @@ def show(ctx, class_id):
 def remove(ctx, class_id):
     """Remove a class (does not remove dancers)."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
+    cls = store.get("classes", class_id)
 
-    cls = classes_coll.get(class_id)
     if cls is None:
-        for cid, c in classes_coll.items():
+        for cid, c in store.iterate("classes"):
             if c["name"].lower() == class_id.lower():
                 cls = c
                 class_id = cid
@@ -134,8 +133,8 @@ def remove(ctx, class_id):
             click.echo(f"Class not found: {class_id}")
             return
 
-    del classes_coll[class_id]
-    store.set_collection("classes", classes_coll)
+    store.execute("DELETE FROM classes WHERE id = ?", (class_id,))
+    store.save()
     click.echo(f"Removed class: {cls['name']}")
 
 
@@ -146,23 +145,26 @@ def remove(ctx, class_id):
 def team_add(ctx, class_id, team_id):
     """Assign a team to a class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
-    teams_coll = store.get_collection("teams")
+    classes_list = store.get_collection("classes")
+    teams_list = store.get_collection("teams")
 
-    cls = classes_coll.get(class_id)
+    cls = store.get("classes", class_id)
     if cls is None:
         click.echo(f"Class not found: {class_id}")
         return
 
-    team = teams_coll.get(team_id)
+    team = store.get("teams", team_id)
     if team is None:
         click.echo(f"Team not found: {team_id}")
         return
 
-    if team_id not in cls.get("team_ids", []):
-        cls["team_ids"].append(team_id)
+    store.execute(
+        "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) "
+        "VALUES (?, ?)",
+        (class_id, team_id),
+    )
 
-    store.set_collection("classes", classes_coll)
+    store.save()
     click.echo(f"Assigned team '{team['name']}' to class '{cls['name']}'.")
 
 
@@ -173,24 +175,29 @@ def team_add(ctx, class_id, team_id):
 def dancer_add(ctx, class_id, dancer_id):
     """Add an individual dancer to a class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
-    dancers_coll = store.get_collection("dancers")
+    classes_list = store.get_collection("classes")
+    dancers_list = store.get_collection("dancers")
 
-    cls = classes_coll.get(class_id)
+    cls = store.get("classes", class_id)
     if cls is None:
         click.echo(f"Class not found: {class_id}")
         return
 
-    if dancer_id not in cls.get("dancer_ids", []):
-        cls["dancer_ids"].append(dancer_id)
+    store.execute(
+        "INSERT OR IGNORE INTO class_dancer_assignments (class_id, dancer_id) "
+        "VALUES (?, ?)",
+        (class_id, dancer_id),
+    )
 
-    dancer = dancers_coll.get(dancer_id)
+    dancer = store.get("dancers", dancer_id)
     if dancer:
-        if class_id not in dancer.get("class_ids", []):
-            dancer["class_ids"].append(class_id)
-        store.set_collection("dancers", dancers_coll)
+        store.execute(
+            "INSERT OR IGNORE INTO class_dancer_assignments (class_id, dancer_id) "
+            "SELECT ?, id FROM classes WHERE id = ?",
+            (class_id, dancer_id),
+        )
 
-    store.set_collection("classes", classes_coll)
+    store.save()
     click.echo(f"Added dancer {dancer_id} to class '{cls['name']}'.")
 
 
@@ -201,26 +208,27 @@ def dancer_add(ctx, class_id, dancer_id):
 def dancer_remove(ctx, class_id, dancer_id):
     """Remove a dancer from a class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
-    dancers_coll = store.get_collection("dancers")
+    classes_list = store.get_collection("classes")
+    dancers_list = store.get_collection("dancers")
 
-    cls = classes_coll.get(class_id)
+    cls = store.get("classes", class_id)
     if cls is None:
         click.echo(f"Class not found: {class_id}")
         return
 
-    dancer_ids = cls.get("dancer_ids", [])
-    if dancer_id in dancer_ids:
-        dancer_ids.remove(dancer_id)
+    store.execute(
+        "DELETE FROM class_dancer_assignments WHERE class_id = ? AND dancer_id = ?",
+        (class_id, dancer_id),
+    )
 
-    dancer = dancers_coll.get(dancer_id)
+    dancer = store.get("dancers", dancer_id)
     if dancer:
-        class_ids = dancer.get("class_ids", [])
-        if class_id in class_ids:
-            class_ids.remove(class_id)
-        store.set_collection("dancers", dancers_coll)
+        store.execute(
+            "DELETE FROM class_dancer_assignments WHERE class_id = ? AND dancer_id = ?",
+            (class_id, dancer_id),
+        )
 
-    store.set_collection("classes", classes_coll)
+    store.save()
     click.echo(f"Removed dancer {dancer_id} from class '{cls['name']}'.")
 
 
@@ -231,24 +239,30 @@ def dancer_remove(ctx, class_id, dancer_id):
 def instructor_assign(ctx, class_id, instructor_id):
     """Assign an instructor to a class."""
     store = get_store()
-    classes_coll = store.get_collection("classes")
-    instructors_coll = store.get_collection("instructors")
+    classes_list = store.get_collection("classes")
+    instructors_list = store.get_collection("instructors")
 
-    cls = classes_coll.get(class_id)
+    cls = store.get("classes", class_id)
     if cls is None:
         click.echo(f"Class not found: {class_id}")
         return
 
-    instructor = instructors_coll.get(instructor_id)
+    instructor = store.get("instructors", instructor_id)
     if instructor is None:
         click.echo(f"Instructor not found: {instructor_id}")
         return
 
-    instructor["class_ids"].append(class_id)
-    cls["instructor_id"] = instructor_id
+    store.execute(
+        "UPDATE classes SET instructor_id = ? WHERE id = ?",
+        (instructor_id, class_id),
+    )
+    store.execute(
+        "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) "
+        "SELECT id, ? FROM teams WHERE id = ?",
+        (class_id, instructor_id),
+    )
 
-    store.set_collection("instructors", instructors_coll)
-    store.set_collection("classes", classes_coll)
+    store.save()
     click.echo(f"Assigned instructor '{instructor['name']}' to class '{cls['name']}'.")
 
 

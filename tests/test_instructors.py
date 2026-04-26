@@ -45,27 +45,27 @@ class TestInstructorsList:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         store.set(
-               "instructors",
-               "diana",
-               {
-                   "id": "diana",
-                   "name": "Diana",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "diana",
+            {
+                "id": "diana",
+                "name": "Diana",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["list"])
         assert result.exit_code == 0
@@ -81,16 +81,16 @@ class TestInstructorsShow:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": ["ballet"],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": ["ballet"],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["show", "charlie"])
         assert result.exit_code == 0
@@ -113,16 +113,16 @@ class TestInstructorsRemove:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["remove", "charlie"])
         assert result.exit_code == 0
@@ -145,28 +145,28 @@ class TestInstructorsAssignClass:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         store.set(
-               "classes",
-               "ballet",
-               {
-                   "id": "ballet",
-                   "name": "Ballet",
-                   "team_ids": [],
-                   "dancer_ids": [],
-                   "instructor_id": None,
-                   "notes": "",
-               },
-           )
+            "classes",
+            "ballet",
+            {
+                "id": "ballet",
+                "name": "Ballet",
+                "team_ids": [],
+                "dancer_ids": [],
+                "instructor_id": None,
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-class", "charlie", "ballet"])
         assert result.exit_code == 0
@@ -176,16 +176,16 @@ class TestInstructorsAssignClass:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-class", "charlie", "ballet"])
         assert result.exit_code == 0
@@ -195,17 +195,17 @@ class TestInstructorsAssignClass:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "classes",
-               "ballet",
-               {
-                   "id": "ballet",
-                   "name": "Ballet",
-                   "team_ids": [],
-                   "dancer_ids": [],
-                   "instructor_id": None,
-                   "notes": "",
-               },
-           )
+            "classes",
+            "ballet",
+            {
+                "id": "ballet",
+                "name": "Ballet",
+                "team_ids": [],
+                "dancer_ids": [],
+                "instructor_id": None,
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-class", "charlie", "ballet"])
         assert result.exit_code == 0
@@ -220,28 +220,28 @@ class TestInstructorsAssignDance:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-dance", "charlie", "waltz"])
         assert result.exit_code == 0
@@ -251,16 +251,16 @@ class TestInstructorsAssignDance:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "instructors",
-               "charlie",
-               {
-                   "id": "charlie",
-                   "name": "Charlie",
-                   "class_ids": [],
-                   "dance_ids": [],
-                   "notes": "",
-               },
-           )
+            "instructors",
+            "charlie",
+            {
+                "id": "charlie",
+                "name": "Charlie",
+                "class_ids": [],
+                "dance_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-dance", "charlie", "waltz"])
         assert result.exit_code == 0
@@ -270,17 +270,17 @@ class TestInstructorsAssignDance:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-               "dances",
-               "waltz",
-               {
-                   "id": "waltz",
-                   "name": "Waltz",
-                   "song_name": "Moon",
-                   "instructor_id": None,
-                   "dancer_ids": [],
-                   "notes": "",
-               },
-           )
+            "dances",
+            "waltz",
+            {
+                "id": "waltz",
+                "name": "Waltz",
+                "song_name": "Moon",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
         runner = CliRunner()
         result = runner.invoke(instructors, ["assign-dance", "charlie", "waltz"])
         assert result.exit_code == 0

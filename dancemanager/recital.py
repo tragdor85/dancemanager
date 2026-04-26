@@ -5,12 +5,14 @@ plus an auto-scheduler that ensures every dancer gets at least 4
 dances between performances.
 """
 
+import json
 from typing import Any, Dict, List, Optional
 
 import click
 
 from dancemanager.models import make_recital_id
 from dancemanager.utils import get_store, render_table
+
 
 MIN_BUFFER = 4  # Minimum dances between a dancer's performances
 
@@ -30,17 +32,16 @@ def recital():
 def add(ctx, name):
     """Create a new recital."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    recitals_list = store.get_collection("recitals")
 
     recital_id = make_recital_id(name)
-    recitals_coll[recital_id] = {
-        "id": recital_id,
-        "name": name,
-        "performance_order": [],
-        "notes": "",
-    }
+    store.execute(
+        "INSERT INTO recitals (id, name, performance_order, notes) "
+        "VALUES (?, ?, ?, ?)",
+        (recital_id, name, "[]", ""),
+    )
 
-    store.set_collection("recitals", recitals_coll)
+    store.save()
     click.echo(f"Created recital: {name} (ID: {recital_id})")
 
 
@@ -49,15 +50,15 @@ def add(ctx, name):
 def list_recitals(ctx):
     """List all recitals."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    recitals_list = store.get_collection("recitals")
 
-    if not recitals_coll or len(recitals_coll) == 0:
+    if not recitals_list or len(recitals_list) == 0:
         click.echo("No recitals found.")
         return
 
     headers = ["ID", "Name", "Dances", "Notes"]
     rows = []
-    for rid, rec in sorted(recitals_coll.items(), key=lambda x: x[1]["name"]):
+    for rid, rec in sorted(recitals_list.items(), key=lambda x: x[1]["name"]):
         po = rec.get("performance_order", [])
         dances_count = len(po) if isinstance(po, list) else 0
         rows.append(
@@ -78,11 +79,10 @@ def list_recitals(ctx):
 def show(ctx, recital_id):
     """Show details for a single recital."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    rec = store.get("recitals", recital_id)
 
-    rec = recitals_coll.get(recital_id)
     if rec is None:
-        for rid, r in recitals_coll.items():
+        for rid, r in store.iterate("recitals"):
             if r["name"].lower() == recital_id.lower():
                 rec = r
                 break
@@ -97,11 +97,11 @@ def show(ctx, recital_id):
             dance = store.get("dances", slot["dance_id"])
             if dance:
                 click.echo(
-                    f"   {slot['position']}. {dance['name']} "
+                    f"  {slot['position']}. {dance['name']} "
                     f"({dance.get('song_name', '')})"
                 )
     else:
-        click.echo("   (no dances scheduled)")
+        click.echo("  (no dances scheduled)")
 
 
 @recital.command()
@@ -110,11 +110,10 @@ def show(ctx, recital_id):
 def remove(ctx, recital_id):
     """Remove a recital."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    rec = store.get("recitals", recital_id)
 
-    rec = recitals_coll.get(recital_id)
     if rec is None:
-        for rid, r in recitals_coll.items():
+        for rid, r in store.iterate("recitals"):
             if r["name"].lower() == recital_id.lower():
                 rec = r
                 break
@@ -122,8 +121,8 @@ def remove(ctx, recital_id):
             click.echo(f"Recital not found: {recital_id}")
             return
 
-    del recitals_coll[recital_id]
-    store.set_collection("recitals", recitals_coll)
+    store.execute("DELETE FROM recitals WHERE id = ?", (recital_id,))
+    store.save()
     click.echo(f"Removed recital: {rec['name']}")
 
 
@@ -134,15 +133,15 @@ def remove(ctx, recital_id):
 def add_dance(ctx, recital_id, dance_id):
     """Add a dance to a recital's performance order."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
-    dances_coll = store.get_collection("dances")
+    recitals_list = store.get_collection("recitals")
+    dances_list = store.get_collection("dances")
 
-    rec = recitals_coll.get(recital_id)
+    rec = store.get("recitals", recital_id)
     if rec is None:
         click.echo(f"Recital not found: {recital_id}")
         return
 
-    dance = dances_coll.get(dance_id)
+    dance = store.get("dances", dance_id)
     if dance is None:
         click.echo(f"Dance not found: {dance_id}")
         return
@@ -155,8 +154,10 @@ def add_dance(ctx, recital_id, dance_id):
 
     position = len(order) + 1
     order.append({"dance_id": dance_id, "position": position})
-    rec["performance_order"] = order
-    store.set_collection("recitals", recitals_coll)
+    store.execute(
+        "UPDATE recitals SET performance_order = ? WHERE id = ?",
+        (json.dumps(order), recital_id),
+    )
     click.echo(
         f"Added dance '{dance['name']}' to recital '{rec['name']}' "
         f"(position {position})."
@@ -171,9 +172,9 @@ def add_dance(ctx, recital_id, dance_id):
 def reorder(ctx, recital_id, position, dance_id):
     """Reorder a dance to a new position in the recital."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    recitals_list = store.get_collection("recitals")
 
-    rec = recitals_coll.get(recital_id)
+    rec = store.get("recitals", recital_id)
     if rec is None:
         click.echo(f"Recital not found: {recital_id}")
         return
@@ -196,7 +197,10 @@ def reorder(ctx, recital_id, position, dance_id):
     for i, slot in enumerate(order):
         slot["position"] = i + 1
 
-    store.set_collection("recitals", recitals_coll)
+    store.execute(
+        "UPDATE recitals SET performance_order = ? WHERE id = ?",
+        (json.dumps(order), recital_id),
+    )
     click.echo(f"Reordered '{dance_id}' to position {position}.")
 
 
@@ -206,14 +210,14 @@ def reorder(ctx, recital_id, position, dance_id):
 def generate_schedule(ctx, recital_id):
     """Auto-generate the optimal performance order."""
     store = get_store()
-    recitals_coll = store.get_collection("recitals")
+    recitals_list = store.get_collection("recitals")
 
-    rec = recitals_coll.get(recital_id)
+    rec = store.get("recitals", recital_id)
     if rec is None:
         click.echo(f"Recital not found: {recital_id}")
         return
 
-    dances_coll = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
     dance_ids = [s["dance_id"] for s in rec.get("performance_order", [])]
 
     if len(dance_ids) < 2:
@@ -223,7 +227,7 @@ def generate_schedule(ctx, recital_id):
     # Build dancer -> dances map
     dancer_dances: Dict[str, List[str]] = {}
     for did in dance_ids:
-        dance = dances_coll.get(did)
+        dance = store.get("dances", did)
         if dance is None:
             continue
         for dancer_id in dance.get("dancer_ids", []):
@@ -240,10 +244,14 @@ def generate_schedule(ctx, recital_id):
         return
 
     # Save the schedule back to the store
-    rec["performance_order"] = [
-        {"dance_id": did, "position": i + 1} for i, did in enumerate(result)
-    ]
-    store.set_collection("recitals", recitals_coll)
+    store.execute(
+        "UPDATE recitals SET performance_order = ? WHERE id = ?",
+        (
+            json.dumps([{"dance_id": did, "position": i + 1} for i, did in enumerate(result)]),
+            recital_id,
+        ),
+    )
+    store.save()
 
     # Print formatted schedule
     click.echo(f"\nRecital: {rec['name']}")
@@ -252,7 +260,7 @@ def generate_schedule(ctx, recital_id):
     click.echo("-" * 80)
 
     for i, did in enumerate(result):
-        dance = dances_coll.get(did)
+        dance = store.get("dances", did)
         if dance is None:
             continue
         song = dance.get("song_name", "")
@@ -284,7 +292,7 @@ def generate_schedule(ctx, recital_id):
     click.echo("  Validation complete.")
 
 
-# ── Scheduling algorithm ────────────────────────────────────────────────
+# ── Scheduling algorithm ───────────────────────────────────────────────────
 
 
 def _score_dance(
@@ -350,7 +358,7 @@ def greedy_schedule(
     return _try_schedule(list(dance_ids), [], dancer_dances, min_buffer)
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────
 
 
 def _get_buffer_note(result, position, dancer_ids, dancer_dances):
@@ -369,9 +377,9 @@ def _get_buffer_note(result, position, dancer_ids, dancer_dances):
             for i, pos in enumerate(positions):
                 if pos == position and i > 0:
                     gap = positions[i] - positions[i - 1] - 1
-                    notes.append(f"   ({dancer_id}: {gap} dance(s) buffer)")
+                    notes.append(f"  ({dancer_id}: {gap} dance(s) buffer)")
         elif len(positions) == 1 and positions[0] == position:
-            notes.append(f"   ({dancer_id}: 1st performance)")
+            notes.append(f"  ({dancer_id}: 1st performance)")
     return "".join(notes)
 
 

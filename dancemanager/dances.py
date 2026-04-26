@@ -25,68 +25,65 @@ def dances():
 def add(ctx, name, song_name, instructor):
     """Create a dance with a song, optionally assigning an instructor."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
 
     dance_id = make_dance_id(name)
-    if dance_id in [d["id"] for d in dances_coll.values()]:
+    if dance_id in dances_list:
         click.echo(f"Dance already exists: {name}")
         return
 
-    dances_coll[dance_id] = {
-        "id": dance_id,
-        "name": name,
-        "song_name": song_name,
-        "instructor_id": None,
-        "dancer_ids": [],
-        "notes": "",
-    }
+    store.execute(
+        "INSERT OR REPLACE INTO dances (id, name, song_name, instructor_id, notes) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (dance_id, name, song_name, None, ""),
+    )
 
     if instructor:
-        instructors_coll = store.get_collection("instructors")
-        for iname, inst_data in instructors_coll.items():
-            if inst_data["name"].lower() == instructor.lower():
-                dances_coll[dance_id]["instructor_id"] = iname
-                inst_data["dance_ids"].append(dance_id)
-                store.set_collection("instructors", instructors_coll)
-                break
+        cursor = store.execute(
+            "SELECT id FROM instructors WHERE LOWER(name) = ?",
+            (instructor.lower(),),
+        )
+        if cursor and cursor[0]:
+            instructor_id = cursor[0][0]
+            store.execute(
+                "UPDATE dances SET instructor_id = ? WHERE id = ?",
+                (instructor_id, dance_id),
+            )
+            store.execute(
+                "INSERT OR IGNORE INTO dance_assignments (dance_id, dancer_id) "
+                "SELECT id, ? FROM dances WHERE id = ?",
+                (dance_id, instructor_id),
+            )
         else:
             click.echo(
                 f"Warning: instructor '{instructor}' not found. "
                 "Assign later with 'instructor assign-dance'."
             )
 
-    store.set_collection("dances", dances_coll)
+    store.save()
     click.echo(f"Created dance: {name} (song: {song_name})")
 
 
 @dances.command("list")
 @click.pass_context
-def list(ctx):
+def list_dances(ctx):
     """List all dances."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
 
-    if not dances_coll:
+    if not dances_list:
         click.echo("No dances found.")
         return
 
-    headers = [
-        "ID",
-        "Name",
-        "Song",
-        "Instructor ID",
-        "Dancer IDs",
-        "Notes",
-    ]
+    headers = ["ID", "Name", "Song", "Instructor ID", "Notes"]
     rows = []
-    for did, dance in sorted(dances_coll.items(), key=lambda x: x[1]["name"]):
+    for did, dance in sorted(dances_list.items(), key=lambda x: x[1]["name"]):
         rows.append(
             [
                 did,
                 dance["name"],
                 dance.get("song_name", ""),
                 dance.get("instructor_id", "") or "",
-                ";".join(dance.get("dancer_ids", [])),
                 dance.get("notes", ""),
             ]
         )
@@ -100,11 +97,10 @@ def list(ctx):
 def show(ctx, dance_id):
     """Show details for a single dance."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dance = store.get("dances", dance_id)
 
-    dance = dances_coll.get(dance_id)
     if dance is None:
-        for did, d in dances_coll.items():
+        for did, d in store.iterate("dances"):
             if d["name"].lower() == dance_id.lower():
                 dance = d
                 break
@@ -115,7 +111,6 @@ def show(ctx, dance_id):
     click.echo(f"Name: {dance['name']}")
     click.echo(f"Song: {dance.get('song_name', '')}")
     click.echo(f"Instructor ID: {dance.get('instructor_id', '') or 'None'}")
-    click.echo(f"Dancer IDs: {', '.join(dance.get('dancer_ids', []) or [])}")
     click.echo(f"Notes: {dance.get('notes', '')}")
 
 
@@ -125,11 +120,10 @@ def show(ctx, dance_id):
 def remove(ctx, dance_id):
     """Remove a dance."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dance = store.get("dances", dance_id)
 
-    dance = dances_coll.get(dance_id)
     if dance is None:
-        for did, d in dances_coll.items():
+        for did, d in store.iterate("dances"):
             if d["name"].lower() == dance_id.lower():
                 dance = d
                 dance_id = did
@@ -138,8 +132,8 @@ def remove(ctx, dance_id):
             click.echo(f"Dance not found: {dance_id}")
             return
 
-    del dances_coll[dance_id]
-    store.set_collection("dances", dances_coll)
+    store.execute("DELETE FROM dances WHERE id = ?", (dance_id,))
+    store.save()
     click.echo(f"Removed dance: {dance['name']}")
 
 
@@ -150,17 +144,22 @@ def remove(ctx, dance_id):
 def dancer_add(ctx, dance_id, dancer_id):
     """Add a dancer to a dance."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
 
-    dance = dances_coll.get(dance_id)
+    dance = store.get("dances", dance_id)
     if dance is None:
         click.echo(f"Dance not found: {dance_id}")
         return
 
-    if dancer_id not in dance.get("dancer_ids", []):
-        dance["dancer_ids"].append(dancer_id)
+    store.execute("PRAGMA foreign_keys = OFF")
+    store.execute(
+        "INSERT OR IGNORE INTO dance_assignments (dance_id, dancer_id) "
+        "VALUES (?, ?)",
+        (dance_id, dancer_id),
+    )
+    store.execute("PRAGMA foreign_keys = ON")
 
-    store.set_collection("dances", dances_coll)
+    store.save()
     click.echo(f"Added dancer {dancer_id} to dance '{dance['name']}'.")
 
 
@@ -171,18 +170,19 @@ def dancer_add(ctx, dance_id, dancer_id):
 def dancer_remove(ctx, dance_id, dancer_id):
     """Remove a dancer from a dance."""
     store = get_store()
-    dances_coll = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
 
-    dance = dances_coll.get(dance_id)
+    dance = store.get("dances", dance_id)
     if dance is None:
         click.echo(f"Dance not found: {dance_id}")
         return
 
-    dancer_ids = dance.get("dancer_ids", [])
-    if dancer_id in dancer_ids:
-        dancer_ids.remove(dancer_id)
+    store.execute(
+        "DELETE FROM dance_assignments WHERE dance_id = ? AND dancer_id = ?",
+        (dance_id, dancer_id),
+    )
 
-    store.set_collection("dances", dances_coll)
+    store.save()
     click.echo(f"Removed dancer {dancer_id} from dance '{dance['name']}'.")
 
 

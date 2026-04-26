@@ -258,10 +258,10 @@ class TestRecitalGenerateSchedule:
         store = DataStore(path=str(tmp_path / "store.json"))
         set_default_store(store)
         store.set(
-             "recitals",
-             "spring",
-             {"id": "spring", "name": "Spring", "performance_order": [], "notes": ""},
-         )
+            "recitals",
+            "spring",
+            {"id": "spring", "name": "Spring", "performance_order": [], "notes": ""},
+        )
         runner = CliRunner()
         result = runner.invoke(recital, ["generate-schedule", "spring"])
         assert result.exit_code == 0

@@ -5,6 +5,7 @@ Includes CSV import/export, CLI helpers, and utility functions used across modul
 
 import csv
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -33,15 +34,10 @@ def get_store(store_path: Optional[str] = None) -> DataStore:
     if ctx is not None:
         if hasattr(ctx, "store"):
             return ctx.store
-        if ctx.obj is not None:
-            obj_sp = ctx.obj.get("store_path") if isinstance(ctx.obj, dict) else None
-            if obj_sp and _store_instance is None:
-                _store_instance = DataStore(path=obj_sp)
-                return _store_instance
     if _store_instance is not None:
         return _store_instance
     _store_instance = DataStore(
-        path=store_path or str(Path(__file__).parent.parent / "data" / "store.json")
+        path=store_path or str(Path(__file__).parent.parent / "data" / "store.db")
     )
     return _store_instance
 
@@ -69,19 +65,19 @@ def render_table(headers, rows):
             cell_str = str(cell)
             col_widths[i] = max(col_widths[i], len(cell_str))
 
-    sep_line = "       ".join("-" * w for w in col_widths)
-    header_line = "       ".join(
+    sep_line = "          ".join("-" * w for w in col_widths)
+    header_line = "          ".join(
         str(h).ljust(col_widths[i]) for i, h in enumerate(headers)
     )
     row_lines = [
-        "       ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
+        "          ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
         for row in rows
     ]
 
     return "\n".join([header_line, sep_line] + row_lines)
 
 
-# ── CSV Import ──────────────────────────────────────────────────────────
+# ── CSV Import ───────────────────────────────────────────────────────────
 
 
 def csv_import_classes(store, filepath):
@@ -107,8 +103,8 @@ def csv_import_classes(store, filepath):
     with open(filepath) as fh:
         content = fh.read()
 
-    classes = store.get_collection("classes")
-    dancers = store.get_collection("dancers")
+    classes_list = store.get_collection("classes")
+    dancers_list = store.get_collection("dancers")
     dancer_names_seen = {}
     header_mode = True
 
@@ -120,14 +116,11 @@ def csv_import_classes(store, filepath):
         if header_mode:
             class_name = stripped
             class_id = make_class_id(class_name)
-            classes[class_id] = {
-                "id": class_id,
-                "name": class_name,
-                "team_ids": [],
-                "dancer_ids": [],
-                "instructor_id": None,
-                "notes": "",
-            }
+            store.execute(
+                "INSERT INTO classes (id, name, team_ids, dancer_ids, instructor_id, notes) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (class_id, class_name, "[]", "[]", None, ""),
+            )
             summary["created"]["classes"] += 1
             header_mode = False
             continue
@@ -141,17 +134,14 @@ def csv_import_classes(store, filepath):
             continue
 
         dancer_names_seen[dancer_name] = dancer_id
-        dancers[dancer_id] = {
-            "id": dancer_id,
-            "name": dancer_name,
-            "team_id": None,
-            "class_ids": [],
-            "notes": "",
-        }
+        store.execute(
+            "INSERT INTO dancers (id, name, team_id, class_ids, notes) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (dancer_id, dancer_name, None, "[]", ""),
+        )
         summary["created"]["dancers"] += 1
 
-    store.set_collection("classes", classes)
-    store.set_collection("dancers", dancers)
+    store.save()
     return summary
 
 
@@ -175,8 +165,8 @@ def csv_import_teams(store, filepath):
     with open(filepath) as fh:
         content = fh.read()
 
-    teams = store.get_collection("teams")
-    dancers = store.get_collection("dancers")
+    teams_list = store.get_collection("teams")
+    dancers_list = store.get_collection("dancers")
     dancer_names_seen = {}
     current_team_name = None
     current_team_id = None
@@ -189,12 +179,11 @@ def csv_import_teams(store, filepath):
         if current_team_name is None:
             current_team_name = stripped
             current_team_id = make_team_id(current_team_name)
-            teams[current_team_id] = {
-                "id": current_team_id,
-                "name": current_team_name,
-                "dancer_ids": [],
-                "notes": "",
-            }
+            store.execute(
+                "INSERT INTO teams (id, name, dancer_ids, notes) "
+                "VALUES (?, ?, ?, ?)",
+                (current_team_id, current_team_name, "[]", ""),
+            )
             summary["created"]["teams"] += 1
             continue
 
@@ -207,26 +196,29 @@ def csv_import_teams(store, filepath):
             continue
 
         dancer_names_seen[dancer_name] = dancer_id
-        dancers[dancer_id] = {
-            "id": dancer_id,
-            "name": dancer_name,
-            "team_id": None,
-            "class_ids": [],
-            "notes": "",
-        }
+        store.execute(
+            "INSERT INTO dancers (id, name, team_id, class_ids, notes) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (dancer_id, dancer_name, None, "[]", ""),
+        )
         summary["created"]["dancers"] += 1
 
-        teams[current_team_id]["dancer_ids"].append(dancer_id)
+        store.execute(
+            "UPDATE teams SET dancer_ids = ? WHERE id = ?",
+            (
+                f"{teams_list.get(current_team_id, {}).get('dancer_ids', [])}, {dancer_id}",
+                current_team_id,
+            ),
+        )
 
-    store.set_collection("teams", teams)
-    store.set_collection("dancers", dancers)
+    store.save()
     return summary
 
 
 def csv_import_dancers(store, filepath):
     """Import dancers from a 2-column CSV: name, team_name (optional)."""
     summary = {"created": 0, "skipped": 0, "errors": 0}
-    dancers = store.get_collection("dancers")
+    dancers_list = store.get_collection("dancers")
 
     with open(filepath) as fh:
         reader = csv.reader(fh)
@@ -241,30 +233,28 @@ def csv_import_dancers(store, filepath):
                 continue
             dancer_id = make_dancer_id(name)
             team_name = row[1].strip() if len(row) > 1 else ""
-            dancers[dancer_id] = {
-                "id": dancer_id,
-                "name": name,
-                "team_id": team_name if team_name else None,
-                "class_ids": [],
-                "notes": "",
-            }
+            store.execute(
+                "INSERT INTO dancers (id, name, team_id, class_ids, notes) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (dancer_id, name, team_name if team_name else None, "[]", ""),
+            )
             summary["created"] += 1
 
-    store.set_collection("dancers", dancers)
+    store.save()
     return summary
 
 
-# ── CSV Export ──────────────────────────────────────────────────────────
+# ── CSV Export ───────────────────────────────────────────────────────────
 
 
 def csv_export_dancers(store, filepath):
     """Export all dancers to a CSV file."""
-    dancers = store.get_collection("dancers")
+    dancers_list = store.get_collection("dancers")
 
     with open(filepath, "w", newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow(["id", "name", "team_id", "class_ids", "notes"])
-        for did, dancer in sorted(dancers.items(), key=lambda x: x[1]["name"]):
+        for did, dancer in sorted(dancers_list.items(), key=lambda x: x[1]["name"]):
             writer.writerow(
                 [
                     did,
@@ -278,12 +268,12 @@ def csv_export_dancers(store, filepath):
 
 def csv_export_teams(store, filepath):
     """Export all teams to a CSV file."""
-    teams = store.get_collection("teams")
+    teams_list = store.get_collection("teams")
 
     with open(filepath, "w", newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow(["id", "name", "dancer_ids", "notes"])
-        for tid, team in sorted(teams.items(), key=lambda x: x[1]["name"]):
+        for tid, team in sorted(teams_list.items(), key=lambda x: x[1]["name"]):
             writer.writerow(
                 [
                     tid,
@@ -296,7 +286,7 @@ def csv_export_teams(store, filepath):
 
 def csv_export_classes(store, filepath):
     """Export all classes to a CSV file."""
-    classes = store.get_collection("classes")
+    classes_list = store.get_collection("classes")
 
     with open(filepath, "w", newline="") as fh:
         writer = csv.writer(fh)
@@ -310,7 +300,7 @@ def csv_export_classes(store, filepath):
                 "notes",
             ]
         )
-        for cid, cls in sorted(classes.items(), key=lambda x: x[1]["name"]):
+        for cid, cls in sorted(classes_list.items(), key=lambda x: x[1]["name"]):
             writer.writerow(
                 [
                     cid,
@@ -325,7 +315,7 @@ def csv_export_classes(store, filepath):
 
 def csv_export_dances(store, filepath):
     """Export all dances to a CSV file."""
-    dances = store.get_collection("dances")
+    dances_list = store.get_collection("dances")
 
     with open(filepath, "w", newline="") as fh:
         writer = csv.writer(fh)
@@ -339,7 +329,7 @@ def csv_export_dances(store, filepath):
                 "notes",
             ]
         )
-        for did, dance in sorted(dances.items(), key=lambda x: x[1]["name"]):
+        for did, dance in sorted(dances_list.items(), key=lambda x: x[1]["name"]):
             writer.writerow(
                 [
                     did,
@@ -387,7 +377,7 @@ def csv_export_recital(store, filepath, recital_id):
                 )
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────
 
 
 def is_class_name(name):
