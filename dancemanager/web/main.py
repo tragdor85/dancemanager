@@ -1,9 +1,11 @@
 """Web application for Dance Manager."""
 
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from dancemanager.store import DataStore, get_store
@@ -19,6 +21,11 @@ from dancemanager.recital import greedy_schedule
 
 app = FastAPI()
 router = APIRouter()
+
+# Serve static files (logos, images, etc.) from the resources directory
+_RESOURCES_DIR = Path(__file__).resolve().parent.parent.parent / "resources"
+if _RESOURCES_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_RESOURCES_DIR)), name="static")
 
 
 def store_dependency():
@@ -980,7 +987,12 @@ async def recital_detail(
     return templates.TemplateResponse(
         request,
         "recitals/detail.html",
-        {"request": request, "page": "recitals", "recital": recital},
+        {
+            "request": request,
+            "page": "recitals",
+            "recital": recital,
+            "recital_id": recital_id,
+        },
     )
 
 
@@ -1075,10 +1087,11 @@ async def recital_schedule_generate(
     )
 
     if len(dance_ids) < 2:
-        return HTMLResponse(
-            '<div class="toast error">Need at least 2 dances to generate a schedule.</div>',
-            status_code=400,
+        msg = (
+            '<div class="toast error">'
+            "Need at least 2 dances to generate a schedule.</div>"
         )
+        return HTMLResponse(msg, status_code=400)
 
     dancer_dances = {}
     for did in dance_ids:
@@ -1114,10 +1127,11 @@ async def recital_edit(
     recital = store.get("recitals", recital_id)
     if not recital:
         return HTMLResponse("Recital not found", status_code=404)
+    dances = list(store.get_collection("dances").values())
     return templates.TemplateResponse(
         request,
         "recitals/form.html",
-        {"request": request, "page": "recitals", "recital": recital},
+        {"request": request, "page": "recitals", "recital": recital, "dances": dances},
     )
 
 
@@ -1132,15 +1146,18 @@ async def recital_create(
     if not name:
         return HTMLResponse("Name is required", status_code=400)
 
-    performance_order_list = [
-        p.strip() for p in performance_order.split(",") if p.strip()
-    ]
+    try:
+        dance_ids = json.loads(performance_order) if performance_order else []
+    except (json.JSONDecodeError, TypeError):
+        dance_ids = [p.strip() for p in performance_order.split(",") if p.strip()]
 
     recital_id = make_recital_id(name)
     recital_data = {
         "id": recital_id,
         "name": name,
-        "performance_order": performance_order_list if performance_order_list else [],
+        "performance_order": [
+            {"dance_id": did, "position": i + 1} for i, did in enumerate(dance_ids)
+        ],
         "notes": "",
     }
 
@@ -1159,14 +1176,17 @@ async def recital_update(
     if not name:
         return HTMLResponse("Name is required", status_code=400)
 
-    performance_order_list = [
-        p.strip() for p in performance_order.split(",") if p.strip()
-    ]
+    try:
+        dance_ids = json.loads(performance_order) if performance_order else []
+    except (json.JSONDecodeError, TypeError):
+        dance_ids = [p.strip() for p in performance_order.split(",") if p.strip()]
 
     recital_data = {
         "id": recital_id,
         "name": name,
-        "performance_order": performance_order_list if performance_order_list else [],
+        "performance_order": [
+            {"dance_id": did, "position": i + 1} for i, did in enumerate(dance_ids)
+        ],
         "notes": "",
     }
 

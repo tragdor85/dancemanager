@@ -1,61 +1,385 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ page }} - Dance Manager</title>
+{% extends "base.html" %}
+
+{% block title %}{{ page }} - Dance Manager{% endblock %}
+
+{% block extra_css %}
 <style>
- * { margin: 0; padding: 0; box-sizing: border-box; }
- body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
- .container { max-width: 800px; margin: 0 auto; }
- nav { background: #333; color: white; padding: 15px; margin-bottom: 20px; }
- nav a { color: white; text-decoration: none; margin-right: 20px; }
- nav a:hover { text-decoration: underline; }
- h1 { color: #333; margin-bottom: 20px; }
- .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
- .form-group { margin-bottom: 20px; }
- .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
- .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
- .btn-group { display: flex; gap: 10px; }
- .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; }
- .btn-primary { background: #007bff; color: white; }
- .btn-primary:hover { background: #0056b3; }
- .btn-success { background: #28a745; color: white; }
- .btn-success:hover { background: #1e7e34; }
- .btn-secondary { background: #6c757d; color: white; }
- .btn-secondary:hover { background: #5a6268; }
- .dance-list { margin-top: 20px; }
- .dance-item { background: #f8f9fa; padding: 10px; margin-bottom: 5px; border-radius: 4px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input[type="text"], .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; cursor: pointer; border: none; font-size: 14px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-danger { background: #dc3545; color: white; padding: 5px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #c82333; }
+    
+    .dance-section { margin-bottom: 25px; }
+    .dance-section h3 { color: #333; margin-bottom: 10px; font-size: 16px; }
+    
+    .assigned-list, .available-list { list-style: none; padding: 0; }
+    
+    .assigned-item {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px 15px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: grab;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    .assigned-item:hover { background: #e9ecef; }
+    .assigned-item.dragging { opacity: 0.5; background: #dee2e6; }
+    .assigned-item.drag-over { border-top: 3px solid #007bff; }
+    
+    .assigned-item .drag-handle { color: #adb5bd; margin-right: 10px; font-size: 18px; }
+    .assigned-item .dance-info { flex: 1; }
+    .assigned-item .dance-name { font-weight: 600; color: #333; }
+    .assigned-item .dance-song { color: #6c757d; font-size: 13px; margin-top: 2px; }
+    
+    .available-item {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 10px 15px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+    }
+    .available-item label { cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; }
+    .available-item input[type="checkbox"] { margin: 0; }
+    .available-item .dance-name { font-weight: 500; color: #333; }
+    .available-item .dance-song { color: #6c757d; font-size: 13px; margin-left: auto; }
+    
+    .empty-message { color: #adb5bd; font-style: italic; padding: 10px 0; }
 </style>
-</head>
-<body>
-<div class="container">
-    <nav>
-         <a href="/">Home</a>
-         <a href="/dancers">Dancers</a>
-         <a href="/teams">Teams</a>
-         <a href="/classes">Classes</a>
-         <a href="/instructors">Instructors</a>
-         <a href="/dances">Dances</a>
-         <a href="/recitals">Recitals</a>
-     </nav>
-     <h1>{{ page }} Form</h1>
-     <div class="form-container">
-           <form method="POST" action="{% if recital %}/recitals/{{ recital.id }}{% else %}/recitals{% endif %}">
-             <div class="form-group">
-                 <label for="name">Name:</label>
-                 <input type="text" id="name" name="name" value="{{ recital.name }}" required>
-             </div>
-             <div class="form-group">
-                 <label for="performance_order">Performance Order:</label>
-                 <input type="text" id="performance_order" name="performance_order" value="{{ recital.performance_order }}">
-             </div>
-             <div class="btn-group">
-                 <a href="/recitals" class="btn btn-secondary">Cancel</a>
-                 <button type="submit" class="btn btn-primary">Save Recital</button>
-             </div>
-         </form>
-     </div>
+{% endblock %}
+
+{% block content %}
+<h1>{{ page }} Form</h1>
+<div class="form-container">
+    <form method="POST" action="{% if recital %}/recitals/{{ recital.id }}{% else %}/recitals{% endif %}" id="recital-form">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ recital.name }}" required>
+        </div>
+        
+        {% if recital %}
+        <div class="dance-section">
+            <h3>Performance Order (drag to reorder)</h3>
+            <ul class="assigned-list" id="assigned-dances">
+                {% for slot in recital.performance_order|default([], true) %}
+                    {% if isinstance(slot, dict) and "dance_id" in slot %}
+                        {% set dance = dances|selectattr("id", "equalto", slot.dance_id)|first %}
+                        <li class="assigned-item" data-dance-id="{{ slot.dance_id }}" draggable="true">
+                            <span class="drag-handle">&#9776;</span>
+                            <div class="dance-info">
+                                <div class="dance-name">{{ dance.name if dance else slot.dance_id }}</div>
+                                <div class="dance-song">{% if dance %}Song: {{ dance.song_name }}{% endif %}</div>
+                            </div>
+                            <button type="button" class="btn btn-danger remove-dance" data-dance-id="{{ slot.dance_id }}">Remove</button>
+                        </li>
+                    {% elif loop.first or recital.performance_order|length == 0 %}
+                        {# Legacy string format - shouldn't happen but handle it #}
+                        {% set dance = dances|selectattr("id", "equalto", slot)|first %}
+                        <li class="assigned-item" data-dance-id="{{ slot }}" draggable="true">
+                            <span class="drag-handle">&#9776;</span>
+                            <div class="dance-info">
+                                <div class="dance-name">{{ dance.name if dance else slot }}</div>
+                                <div class="dance-song">{% if dance %}Song: {{ dance.song_name }}{% endif %}</div>
+                            </div>
+                            <button type="button" class="btn btn-danger remove-dance" data-dance-id="{{ slot }}">Remove</button>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            <p id="no-assigned" class="empty-message">No dances added yet. Add dances from the list below.</p>
+        </div>
+        
+        <div class="dance-section">
+            <h3>Add Dances</h3>
+            {% set assigned_ids = [] %}
+            {% for slot in recital.performance_order|default([], true) %}
+                {% if isinstance(slot, dict) and "dance_id" in slot %}
+                    {{ assigned_ids.append(slot.dance_id) }}
+                {% elif not loop.first or recital.performance_order|length == 0 %}
+                    {{ assigned_ids.append(slot) }}
+                {% endif %}
+            {% endfor %}
+            
+            <ul class="available-list" id="available-dances">
+                {% for dance in dances %}
+                    {% if dance.id not in assigned_ids %}
+                        <li class="available-item">
+                            <label>
+                                <input type="checkbox" class="add-dance-checkbox" data-dance-id="{{ dance.id }}">
+                                <span class="dance-name">{{ dance.name }}</span>
+                                <span class="dance-song">Song: {{ dance.song_name }}</span>
+                            </label>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        
+        {% endif %}
+        
+        <input type="hidden" name="performance_order" id="perf-order-input" value="">
+        
+        <div class="btn-group">
+            <a href="/recitals" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Recital</button>
+        </div>
+    </form>
 </div>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const assignedList = document.getElementById('assigned-dances');
+    const noAssignedMsg = document.getElementById('no-assigned');
+    const perfOrderInput = document.getElementById('perf-order-input');
+    
+    if (!assignedList) return;
+    
+    // ── Drag and Drop ──────────────────────────────────────────────
+    let draggedItem = null;
+    
+    assignedList.addEventListener('dragstart', function(e) {
+        const item = e.target.closest('.assigned-item');
+        if (!item) return;
+        draggedItem = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    
+    assignedList.addEventListener('dragend', function(e) {
+        if (draggedItem) {
+            draggedItem.classList.remove('dragging');
+            draggedItem = null;
+        }
+        document.querySelectorAll('.assigned-item').forEach(function(item) {
+            item.classList.remove('drag-over');
+        });
+    });
+    
+    assignedList.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const targetItem = e.target.closest('.assigned-item');
+        if (!targetItem || targetItem === draggedItem) return;
+        
+        document.querySelectorAll('.assigned-item').forEach(function(item) {
+            item.classList.remove('drag-over');
+        });
+        targetItem.classList.add('drag-over');
+    });
+    
+    assignedList.addEventListener('dragleave', function(e) {
+        const targetItem = e.target.closest('.assigned-item');
+        if (targetItem) targetItem.classList.remove('drag-over');
+    });
+    
+    assignedList.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const targetItem = e.target.closest('.assigned-item');
+        if (!targetItem || targetItem === draggedItem) return;
+        
+        const items = Array.from(assignedList.querySelectorAll('.assigned-item'));
+        const dragIdx = items.indexOf(draggedItem);
+        const dropIdx = items.indexOf(targetItem);
+        
+        if (dragIdx < dropIdx) {
+            assignedList.insertBefore(draggedItem, targetItem.nextSibling);
+        } else {
+            assignedList.insertBefore(draggedItem, targetItem);
+        }
+        
+        updateHiddenInput();
+    });
+    
+    // ── Hidden input for form submission ───────────────────────────
+    function updateHiddenInput() {
+        const danceIds = [];
+        assignedList.querySelectorAll('.assigned-item').forEach(function(item) {
+            danceIds.push(item.dataset.danceId);
+        });
+        perfOrderInput.value = JSON.stringify(danceIds);
+        
+        if (noAssignedMsg) {
+            noAssignedMsg.style.display = assignedList.children.length === 0 ? 'block' : 'none';
+        }
+    }
+    
+    // ── Add dance via checkbox ─────────────────────────────────────
+    document.querySelectorAll('.add-dance-checkbox').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function(e) {
+            const danceId = e.target.dataset.danceId;
+            if (!e.target.checked) return;
+            
+            addDanceToRecital(danceId);
+        });
+    });
+    
+    async function addDanceToRecital(danceId) {
+        const formAction = document.querySelector('#recital-form').action;
+        let url;
+        
+        if (formAction.includes('/recitals/new')) {
+            // For new recital, we'll just move the item in DOM
+            const availableItem = document.querySelector(`.available-item input[data-dance-id="${danceId}"]`).closest('.available-item');
+            const danceName = availableItem.querySelector('.dance-name').textContent;
+            const songName = availableItem.querySelector('.dance-song').textContent;
+            
+            const li = document.createElement('li');
+            li.className = 'assigned-item';
+            li.dataset.danceId = danceId;
+            li.draggable = true;
+            li.innerHTML = `
+                <span class="drag-handle">&#9776;</span>
+                <div class="dance-info">
+                    <div class="dance-name">${danceName}</div>
+                    <div class="dance-song">${songName}</div>
+                </div>
+                <button type="button" class="btn btn-danger remove-dance" data-dance-id="${danceId}">Remove</button>
+            `;
+            
+            // Re-attach drag events to new item
+            li.addEventListener('dragstart', function(e) {
+                draggedItem = li;
+                li.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            li.addEventListener('dragend', function() {
+                li.classList.remove('dragging');
+                draggedItem = null;
+            });
+            
+            assignedList.appendChild(li);
+            availableItem.remove();
+            updateHiddenInput();
+        } else {
+            // For existing recital, use AJAX
+            const recitalId = formAction.split('/recitals/')[1].split('/')[0];
+            url = `/api/recitals/${recitalId}/dances/add`;
+            
+            try {
+                const response = await fetch(`${url}?dance_id=${encodeURIComponent(danceId)}`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    // Move from available to assigned
+                    const availableItem = document.querySelector(`.available-item input[data-dance-id="${danceId}"]`).closest('.available-item');
+                    const danceName = availableItem.querySelector('.dance-name').textContent;
+                    const songName = availableItem.querySelector('.dance-song').textContent;
+                    
+                    // Remove from available list
+                    availableItem.remove();
+                    
+                    // Add to assigned list at the end
+                    const li = document.createElement('li');
+                    li.className = 'assigned-item';
+                    li.dataset.danceId = danceId;
+                    li.draggable = true;
+                    li.innerHTML = `
+                        <span class="drag-handle">&#9776;</span>
+                        <div class="dance-info">
+                            <div class="dance-name">${danceName}</div>
+                            <div class="dance-song">${songName}</div>
+                        </div>
+                        <button type="button" class="btn btn-danger remove-dance" data-dance-id="${danceId}">Remove</button>
+                    `;
+                    
+                    li.addEventListener('dragstart', function(e) {
+                        draggedItem = li;
+                        li.classList.add('dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                    });
+                    li.addEventListener('dragend', function() {
+                        li.classList.remove('dragging');
+                        draggedItem = null;
+                    });
+                    
+                    assignedList.appendChild(li);
+                    updateHiddenInput();
+                }
+            } catch (err) {
+                console.error('Error adding dance:', err);
+            }
+        }
+    }
+    
+    // ── Remove dance ───────────────────────────────────────────────
+    document.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('remove-dance')) return;
+        
+        const danceId = e.target.dataset.danceId;
+        removeDanceFromRecital(danceId);
+    });
+    
+    async function removeDanceFromRecital(danceId) {
+        // Remove from assigned list
+        const item = document.querySelector(`.assigned-item[data-dance-id="${danceId}"]`);
+        if (item) {
+            const danceName = item.querySelector('.dance-name').textContent;
+            item.remove();
+            
+            // Add back to available list
+            const li = document.createElement('li');
+            li.className = 'available-item';
+            li.innerHTML = `
+                <label>
+                    <input type="checkbox" class="add-dance-checkbox" data-dance-id="${danceId}">
+                    <span class="dance-name">${danceName}</span>
+                    <span class="dance-song"></span>
+                </label>
+            `;
+            
+            // Find the correct song name from existing items or use empty
+            const allAssigned = document.querySelectorAll('.assigned-item');
+            let songText = '';
+            for (const a of allAssigned) {
+                if (a.dataset.danceId === danceId) {
+                    songText = a.querySelector('.dance-song').textContent;
+                    break;
+                }
+            }
+            
+            li.querySelector('input[type="checkbox"]').dataset.danceId = danceId;
+            li.querySelector('label').insertBefore(
+                li.querySelector('input'), 
+                li.querySelector('.dance-name')
+            );
+            
+            document.getElementById('available-dances').appendChild(li);
+            updateHiddenInput();
+        }
+        
+        // If editing existing recital, also remove via API
+        const formAction = document.querySelector('#recital-form').action;
+        if (!formAction.includes('/recitals/new')) {
+            const recitalId = formAction.split('/recitals/')[1].split('/')[0];
+            try {
+                await fetch(`/api/recitals/${recitalId}/dances/remove?dance_id=${danceId}`, {method: 'POST'});
+            } catch (err) {
+                console.error('Error removing dance:', err);
+            }
+        }
+    }
+    
+    // ── Initialize ─────────────────────────────────────────────────
+    updateHiddenInput();
+})();
+</script>
+{% endblock %}
