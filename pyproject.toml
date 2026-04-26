@@ -1,0 +1,26 @@
+[project]
+name = "dancemanager"
+version = "1.0.0"
+requires-python = ">=3.11"
+dependencies = [
+    "click==8.1.7",
+    "fastapi==0.115.5",
+    "jinja2==3.1.4",
+    "python-multipart==0.0.6",
+    "uvicorn==0.32.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pytest",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.flake8]
+max-line-length = 88
+ignore = ["E203", "W503"]
