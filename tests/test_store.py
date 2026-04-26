@@ -61,7 +61,7 @@ class TestDataStoreGet:
         store = DataStore(tmp_path / "store.json")
         store.set("dancers", "d1", {"name": "Alice"})
         result = store.get("dancers", "d1")
-        assert result == {"name": "Alice"}
+        assert result == {"id": "d1", "name": "Alice"}
 
     def test_get_missing_item(self, tmp_path):
         store = DataStore(tmp_path / "store.json")
@@ -89,8 +89,8 @@ class TestDataStoreGet:
         store.set("dancers", "d2", {"name": "Bob"})
         results = store.get_all("dancers")
         assert len(results) == 2
-        assert {"name": "Alice"} in results
-        assert {"name": "Bob"} in results
+        assert {"id": "d1", "name": "Alice"} in results
+        assert {"id": "d2", "name": "Bob"} in results
 
     def test_get_all_empty(self, tmp_path):
         store = DataStore(tmp_path / "store.json")
@@ -106,8 +106,8 @@ class TestDataStoreSet:
         store.set("dancers", "d1", {"name": "Alice"})
         store.set("dancers", "d2", {"name": "Bob"})
         assert store.get_collection("dancers") == {
-            "d1": {"name": "Alice"},
-            "d2": {"name": "Bob"},
+            "d1": {"id": "d1", "name": "Alice"},
+            "d2": {"id": "d2", "name": "Bob"},
         }
 
     def test_set_new_collection(self, tmp_path):
@@ -313,7 +313,7 @@ class TestDataStoreIntegrity:
 
         for _ in range(10):
             result = store.get("dancers", "d1")
-            assert result == {"name": "Alice"}
+            assert result == {"id": "d1", "name": "Alice"}
 
     def test_multiple_saves_preserve_data(self, tmp_path):
         store = DataStore(tmp_path / "store.json")
@@ -323,7 +323,7 @@ class TestDataStoreIntegrity:
         store.save()
         store.save()
 
-        assert store.get("dancers", "d1") == {"name": "Alice"}
+        assert store.get("dancers", "d1") == {"id": "d1", "name": "Alice"}
 
 
 class TestDataStorePathHandling:
@@ -334,11 +334,11 @@ class TestDataStorePathHandling:
         custom_path.parent.mkdir(parents=True, exist_ok=True)
         store = DataStore(path=str(custom_path))
         store.set("dancers", "d1", {"name": "Alice"})
-        assert store.get("dancers", "d1") == {"name": "Alice"}
+        assert store.get("dancers", "d1") == {"id": "d1", "name": "Alice"}
 
     def test_nested_directories_created(self, tmp_path):
         nested_path = tmp_path / "a" / "b" / "c" / "store.json"
         store = DataStore(path=str(nested_path))
         assert store._path.exists()
         store.set("dancers", "d1", {"name": "Alice"})
-        assert store.get("dancers", "d1") == {"name": "Alice"}
+        assert store.get("dancers", "d1") == {"id": "d1", "name": "Alice"}

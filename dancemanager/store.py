@@ -71,8 +71,8 @@ class DataStore:
         result = self._query(f"SELECT * FROM {collection} WHERE id = ?", (key,))
         if result:
             row = dict(result[0])
-            # Filter out None/NULL values and 'id' to match JSON store behavior
-            row = {k: v for k, v in row.items() if v is not None and k != "id"}
+            # Filter out None/NULL values but keep 'id' and 'extra' since they're needed
+            row = {k: v for k, v in row.items() if v is not None}
             # Merge extra fields back from the 'extra' column
             extra_str = row.pop("extra", None)
             if extra_str:
@@ -194,9 +194,12 @@ class DataStore:
         out = {}
         for row in result:
             item = dict(row)
-            # Filter out None/NULL values and 'id' to match JSON store behavior
+            # Filter out None/NULL values but keep 'id' since templates need it
             item_id = item.pop("id", None)
-            item = {k: v for k, v in item.items() if v is not None}
+            item = {k: v for k, v in item.items() if v is not None and k != "extra"}
+            # Add id back to the item so templates can access dancer.id, etc.
+            if item_id is not None:
+                item["id"] = item_id
             # Merge extra fields back from the 'extra' column
             extra_str = item.pop("extra", None)
             if extra_str:
@@ -565,22 +568,98 @@ class DataStore:
         self._conn.commit()
 
     def _migrate(self):
-        """Migrate from JSON store if needed."""
-        json_path = self._path.with_suffix(".json")
-        if json_path.exists():
-            try:
-                with open(json_path, "r") as fh:
-                    data = json.load(fh)
-                # Clear metadata and re-populate
-                self._conn.execute("DELETE FROM metadata")
-                for key, value in data.items():
+        """Ensure metadata version is set. Data should already be in tables."""
+        result = self._query("SELECT value FROM metadata WHERE key = ?", ("version",))
+        if not result:
+            # No version set - data may need to be migrated from JSON
+            json_path = self._path.with_suffix(".json")
+            if json_path.exists():
+                try:
+                    with open(json_path, "r") as fh:
+                        data = json.load(fh)
+
+                    def get_items(collection):
+                        items = data.get(collection, {})
+                        if isinstance(items, dict):
+                            return list(items.values())
+                        return items
+
+                    # Migrate instructors
+                    for instructor in get_items("instructors"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO instructors (id, name, notes) VALUES (?, ?, ?)",
+                            (instructor["id"], instructor["name"], instructor.get("notes", "")),
+                        )
+
+                    # Migrate teams
+                    for team in get_items("teams"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO teams (id, name, notes) VALUES (?, ?, ?)",
+                            (team["id"], team["name"], team.get("notes", "")),
+                        )
+
+                    # Migrate dancers
+                    for dancer in get_items("dancers"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO dancers (id, name, team_id, notes) VALUES (?, ?, ?, ?)",
+                            (dancer["id"], dancer["name"], dancer.get("team_id"), dancer.get("notes", "")),
+                        )
+
+                    # Migrate classes
+                    for cls in get_items("classes"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO classes (id, name, instructor_id, notes) VALUES (?, ?, ?, ?)",
+                            (cls["id"], cls["name"], cls.get("instructor_id"), cls.get("notes", "")),
+                        )
+
+                    # Migrate dances
+                    for dance in get_items("dances"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO dances (id, name, song_name, instructor_id, notes) VALUES (?, ?, ?, ?, ?)",
+                            (dance["id"], dance["name"], dance["song_name"], dance.get("instructor_id"), dance.get("notes", "")),
+                        )
+
+                    # Migrate recitals
+                    for recital in get_items("recitals"):
+                        self._conn.execute(
+                            "INSERT OR REPLACE INTO recitals (id, name, notes) VALUES (?, ?, ?)",
+                            (recital["id"], recital["name"], recital.get("notes", "")),
+                        )
+
+                    # Migrate dance assignments
+                    for dance in get_items("dances"):
+                        dance_id = dance["id"]
+                        for dancer_id in dance.get("dancer_ids", []):
+                            self._conn.execute(
+                                "INSERT OR IGNORE INTO dance_assignments (dance_id, dancer_id) VALUES (?, ?)",
+                                (dance_id, dancer_id),
+                            )
+
+                    # Migrate class-team assignments
+                    for cls in get_items("classes"):
+                        class_id = cls["id"]
+                        for team_id in cls.get("team_ids", []):
+                            self._conn.execute(
+                                "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) VALUES (?, ?)",
+                                (class_id, team_id),
+                            )
+
+                    # Migrate class-dancer assignments
+                    for cls in get_items("classes"):
+                        class_id = cls["id"]
+                        for dancer_id in cls.get("dancer_ids", []):
+                            self._conn.execute(
+                                "INSERT OR IGNORE INTO class_dancer_assignments (class_id, dancer_id) VALUES (?, ?)",
+                                (class_id, dancer_id),
+                            )
+
+                    # Set version
                     self._conn.execute(
-                        "INSERT INTO metadata (key, value) VALUES (?, ?)",
-                        (key, json.dumps(value)),
+                        "INSERT OR REPLACE INTO metadata (key, value) VALUES ('version', '\"1.0.0\"')",
                     )
-                self._conn.commit()
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass  # JSON file is corrupted or not valid, skip migration
+                    self._conn.commit()
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    pass  # JSON file is corrupted or not valid, skip migration
 
     def _query(self, sql: str, params: tuple = ()) -> List[Dict]:
         """Execute a query and return results as list of dicts."""

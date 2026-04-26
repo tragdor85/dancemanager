@@ -40,14 +40,28 @@
           <div class="dancer-info">
               <h2>{{ dancer.name }}</h2>
               <p><strong>ID:</strong> {{ dancer.id }}</p>
-              <p><strong>Classes:</strong> %(dancer.class_ids|length)</p>
+              <p><strong>Classes:</strong> {{ dancer.class_ids|length }}</p>
               <p><strong>Team:</strong> {{ dancer.team_name }}</p>
           </div>
           <div class="actions">
               <a href="/dancers/{{ dancer.id }}/edit" class="btn btn-primary">Edit Dancer</a>
               <a href="/dancers" class="btn btn-secondary">Back to List</a>
-              <a href="#" onclick="return confirmDelete()" class="btn btn-danger">Delete</a>
-          </div>
-      </div>
+              <button type="button" class="btn btn-danger" onclick="deleteDancer('{{ dancer.id }}')">Delete</button>
+           </div>
+       </div>
+       <script>
+           function deleteDancer(id) {
+               if (!confirm('Are you sure you want to delete this dancer? This cannot be undone.')) {
+                   return;
+               }
+               fetch('/dancers/' + id, { method: 'DELETE' })
+                   .then(function(response) {
+                       window.location.href = '/dancers';
+                   })
+                   .catch(function() {
+                       alert('Error deleting dancer. Please try again.');
+                   });
+           }
+       </script>
 </body>
 </html>

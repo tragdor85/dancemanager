@@ -16,22 +16,29 @@ def migrate_up(conn):
     with open(json_path, "r") as f:
         data = json.load(f)
 
+    # Collections are stored as dicts: {id: {...}, ...}
+    def get_items(collection):
+        items = data.get(collection, {})
+        if isinstance(items, dict):
+            return list(items.values())
+        return items
+
     # Migrate instructors
-    for instructor in data.get("instructors", []):
+    for instructor in get_items("instructors"):
         cursor.execute(
             "INSERT OR REPLACE INTO instructors (id, name, notes) VALUES (?, ?, ?)",
             (instructor["id"], instructor["name"], instructor.get("notes", "")),
         )
 
     # Migrate teams
-    for team in data.get("teams", []):
+    for team in get_items("teams"):
         cursor.execute(
             "INSERT OR REPLACE INTO teams (id, name, notes) VALUES (?, ?, ?)",
             (team["id"], team["name"], team.get("notes", "")),
         )
 
     # Migrate dancers
-    for dancer in data.get("dancers", []):
+    for dancer in get_items("dancers"):
         cursor.execute(
             "INSERT OR REPLACE INTO dancers (id, name, team_id, notes) VALUES (?, ?, ?, ?)",
             (
@@ -43,14 +50,14 @@ def migrate_up(conn):
         )
 
     # Migrate classes
-    for cls in data.get("classes", []):
+    for cls in get_items("classes"):
         cursor.execute(
             "INSERT OR REPLACE INTO classes (id, name, instructor_id, notes) VALUES (?, ?, ?, ?)",
             (cls["id"], cls["name"], cls.get("instructor_id"), cls.get("notes", "")),
         )
 
     # Migrate dances
-    for dance in data.get("dances", []):
+    for dance in get_items("dances"):
         cursor.execute(
             "INSERT OR REPLACE INTO dances (id, name, song_name, instructor_id, notes) VALUES (?, ?, ?, ?, ?)",
             (
@@ -63,14 +70,14 @@ def migrate_up(conn):
         )
 
     # Migrate recitals
-    for recital in data.get("recitals", []):
+    for recital in get_items("recitals"):
         cursor.execute(
             "INSERT OR REPLACE INTO recitals (id, name, notes) VALUES (?, ?, ?)",
             (recital["id"], recital["name"], recital.get("notes", "")),
         )
 
     # Migrate dance assignments (many-to-many: dances <-> dancers)
-    for dance in data.get("dances", []):
+    for dance in get_items("dances"):
         dance_id = dance["id"]
         for dancer_id in dance.get("dancer_ids", []):
             cursor.execute(
@@ -79,7 +86,7 @@ def migrate_up(conn):
             )
 
     # Migrate class-team assignments (many-to-many: classes <-> teams)
-    for cls in data.get("classes", []):
+    for cls in get_items("classes"):
         class_id = cls["id"]
         for team_id in cls.get("team_ids", []):
             cursor.execute(
@@ -88,7 +95,7 @@ def migrate_up(conn):
             )
 
     # Migrate class-dancer assignments (many-to-many: classes <-> dancers)
-    for cls in data.get("classes", []):
+    for cls in get_items("classes"):
         class_id = cls["id"]
         for dancer_id in cls.get("dancer_ids", []):
             cursor.execute(
@@ -97,7 +104,7 @@ def migrate_up(conn):
             )
 
     # Migrate recital dances (recital performance order)
-    for recital in data.get("recitals", []):
+    for recital in get_items("recitals"):
         recital_id = recital["id"]
         for item in recital.get("performance_order", []):
             dance_id = item["dance_id"]
@@ -107,11 +114,11 @@ def migrate_up(conn):
                 (recital_id, dance_id, position),
             )
 
-    # Update version tracking
+    # Clear all data from metadata table and set version
     cursor.execute("DELETE FROM metadata")
     cursor.execute(
         "INSERT INTO metadata (key, value) VALUES (?, ?)",
-        ("version", "1.0.0"),
+        ("version", '"1.0.0"'),
     )
     conn.commit()
 

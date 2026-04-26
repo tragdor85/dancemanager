@@ -35,6 +35,7 @@ templates = Jinja2Templates(directory=str(_templates_dir))
 @router.get("/")
 async def index(request: Request, store: DataStore = Depends(store_dependency)):
     return templates.TemplateResponse(
+        request,
         "index.html",
         {
             "request": request,
@@ -68,6 +69,7 @@ async def dancers(
         d["team_name"] = team_map.get(d.get("team_id"), "")
 
     return templates.TemplateResponse(
+        request,
         "dancers/list.html",
         {"request": request, "page": "dancers", "dancers": all_dancers, "query": q},
     )
@@ -78,6 +80,7 @@ async def dancer_new(request: Request, store: DataStore = Depends(store_dependen
     teams = list(store.get_collection("teams").values())
     classes = list(store.get_collection("classes").values())
     return templates.TemplateResponse(
+        request,
         "dancers/form.html",
         {
             "request": request,
@@ -111,6 +114,7 @@ async def dancer_detail(
     dancer["classes"] = dancer_classes
 
     return templates.TemplateResponse(
+        request,
         "dancers/detail.html",
         {"request": request, "page": "dancers", "dancer": dancer},
     )
@@ -127,6 +131,7 @@ async def dancer_edit(
     teams = list(store.get_collection("teams").values())
     classes = list(store.get_collection("classes").values())
     return templates.TemplateResponse(
+        request,
         "dancers/form.html",
         {
             "request": request,
@@ -207,6 +212,7 @@ async def teams_list(request: Request, store: DataStore = Depends(store_dependen
     teams_coll = store.get_collection("teams")
     teams = [{"id": tid, **t} for tid, t in teams_coll.items()]
     return templates.TemplateResponse(
+        request,
         "teams/list.html",
         {"request": request, "page": "teams", "teams": teams},
     )
@@ -216,6 +222,7 @@ async def teams_list(request: Request, store: DataStore = Depends(store_dependen
 async def team_new(request: Request, store: DataStore = Depends(store_dependency)):
     dancers = list(store.get_collection("dancers").values())
     return templates.TemplateResponse(
+        request,
         "teams/form.html",
         {"request": request, "page": "teams", "dancers": dancers, "team": None},
     )
@@ -233,6 +240,7 @@ async def team_detail(
     team_dancers = [d for d in dancers if d.get("team_id") == team_id]
 
     return templates.TemplateResponse(
+        request,
         "teams/detail.html",
         {"request": request, "page": "teams", "team": team, "dancers": team_dancers},
     )
@@ -248,6 +256,7 @@ async def team_edit(
 
     dancers = list(store.get_collection("dancers").values())
     return templates.TemplateResponse(
+        request,
         "teams/form.html",
         {"request": request, "page": "teams", "dancers": dancers, "team": team},
     )
@@ -331,6 +340,7 @@ async def classes_list(request: Request, store: DataStore = Depends(store_depend
     classes_coll = store.get_collection("classes")
     classes = [{"id": cid, **c} for cid, c in classes_coll.items()]
     return templates.TemplateResponse(
+        request,
         "classes/list.html",
         {"request": request, "page": "classes", "classes": classes},
     )
@@ -341,6 +351,7 @@ async def class_new(request: Request, store: DataStore = Depends(store_dependenc
     instructors = list(store.get_collection("instructors").values())
     teams = list(store.get_collection("teams").values())
     return templates.TemplateResponse(
+        request,
         "classes/form.html",
         {
             "request": request,
@@ -366,6 +377,7 @@ async def class_detail(
     ]
 
     return templates.TemplateResponse(
+        request,
         "classes/detail.html",
         {
             "request": request,
@@ -387,6 +399,7 @@ async def class_edit(
     instructors = list(store.get_collection("instructors").values())
     teams = list(store.get_collection("teams").values())
     return templates.TemplateResponse(
+        request,
         "classes/form.html",
         {
             "request": request,
@@ -467,6 +480,7 @@ async def instructors_list(
     instructors_coll = store.get_collection("instructors")
     instructors = [{"id": iid, **i} for iid, i in instructors_coll.items()]
     return templates.TemplateResponse(
+        request,
         "instructors/list.html",
         {"request": request, "page": "instructors", "instructors": instructors},
     )
@@ -479,6 +493,7 @@ async def instructor_new(
     classes = list(store.get_collection("classes").values())
     dances = list(store.get_collection("dances").values())
     return templates.TemplateResponse(
+        request,
         "instructors/form.html",
         {
             "request": request,
@@ -505,6 +520,7 @@ async def instructor_detail(
     instructor_dances = [d for d in dances if d.get("instructor_id") == instructor_id]
 
     return templates.TemplateResponse(
+        request,
         "instructors/detail.html",
         {
             "request": request,
@@ -527,6 +543,7 @@ async def instructor_edit(
     classes = list(store.get_collection("classes").values())
     dances = list(store.get_collection("dances").values())
     return templates.TemplateResponse(
+        request,
         "instructors/form.html",
         {
             "request": request,
@@ -607,6 +624,7 @@ async def dances_list(request: Request, store: DataStore = Depends(store_depende
     dances_coll = store.get_collection("dances")
     dances = [{"id": did, **d} for did, d in dances_coll.items()]
     return templates.TemplateResponse(
+        request,
         "dances/list.html",
         {"request": request, "page": "dances", "dances": dances},
     )
@@ -617,6 +635,7 @@ async def dance_new(request: Request, store: DataStore = Depends(store_dependenc
     instructors = list(store.get_collection("instructors").values())
     dancers = list(store.get_collection("dancers").values())
     return templates.TemplateResponse(
+        request,
         "dances/form.html",
         {
             "request": request,
@@ -640,6 +659,7 @@ async def dance_detail(
     dance_dancers = [d for d in dancers if dance_id in d.get("dancer_ids", [])]
 
     return templates.TemplateResponse(
+        request,
         "dances/detail.html",
         {
             "request": request,
@@ -661,6 +681,7 @@ async def dance_edit(
     instructors = list(store.get_collection("instructors").values())
     dancers = list(store.get_collection("dancers").values())
     return templates.TemplateResponse(
+        request,
         "dances/form.html",
         {
             "request": request,
@@ -744,6 +765,7 @@ async def recitals_list(request: Request, store: DataStore = Depends(store_depen
     recitals_coll = store.get_collection("recitals")
     recitals = [{"id": rid, **r} for rid, r in recitals_coll.items()]
     return templates.TemplateResponse(
+        request,
         "recitals/list.html",
         {"request": request, "page": "recitals", "recitals": recitals},
     )
@@ -753,6 +775,7 @@ async def recitals_list(request: Request, store: DataStore = Depends(store_depen
 async def recital_new(request: Request, store: DataStore = Depends(store_dependency)):
     dances = list(store.get_collection("dances").values())
     return templates.TemplateResponse(
+        request,
         "recitals/form.html",
         {"request": request, "page": "recitals", "dances": dances, "recital": None},
     )
@@ -767,6 +790,7 @@ async def recital_detail(
         return HTMLResponse("Recital not found", status_code=404)
 
     return templates.TemplateResponse(
+        request,
         "recitals/detail.html",
         {"request": request, "page": "recitals", "recital": recital},
     )
@@ -828,6 +852,7 @@ async def recital_schedule(
             errors.append("Could not generate a valid schedule.")
 
     return templates.TemplateResponse(
+        request,
         "recitals/schedule.html",
         {
             "request": request,
@@ -896,6 +921,7 @@ async def recital_edit(
     if not recital:
         return HTMLResponse("Recital not found", status_code=404)
     return templates.TemplateResponse(
+        request,
         "recitals/form.html",
         {"request": request, "page": "recitals", "recital": recital},
     )
