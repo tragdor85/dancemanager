@@ -158,7 +158,14 @@ class DataStore:
         if "performance_order" in value:
             val = value["performance_order"]
             if isinstance(val, (list, tuple)):
-                val = json.dumps([dict(p) for p in val])
+                # Handle both legacy format (list of dance_id strings) and new format (list of dicts)
+                normalized = []
+                for p in val:
+                    if isinstance(p, dict):
+                        normalized.append(p)
+                    else:
+                        normalized.append({"dance_id": str(p), "position": 0})
+                val = json.dumps(normalized)
             columns.append("performance_order")
             params.append(val)
         if "notes" in value:
