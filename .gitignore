@@ -6,4 +6,5 @@ __pycache__/
 *.json
 .coverage
 *.so
+.DS_Store
 data/
