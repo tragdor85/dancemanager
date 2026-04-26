@@ -700,6 +700,33 @@ async def instructor_create(
     }
 
     store.set("instructors", instructor_id, instructor_data)
+
+    classes_coll = store.get_collection("classes")
+    for cid in class_ids_list:
+        if cid in classes_coll:
+            cls = store.get("classes", cid)
+            if cls:
+                cls["instructor_id"] = instructor_id
+                store.set("classes", cid, cls)
+    for cid in classes_coll:
+        c = store.get("classes", cid)
+        if c and c.get("instructor_id") == instructor_id and cid not in class_ids_list:
+            c["instructor_id"] = None
+            store.set("classes", cid, c)
+
+    dances_coll = store.get_collection("dances")
+    for did in dance_ids_list:
+        if did in dances_coll:
+            dance = store.get("dances", did)
+            if dance:
+                dance["instructor_id"] = instructor_id
+                store.set("dances", did, dance)
+    for did in dances_coll:
+        d = store.get("dances", did)
+        if d and d.get("instructor_id") == instructor_id and did not in dance_ids_list:
+            d["instructor_id"] = None
+            store.set("dances", did, d)
+
     return RedirectResponse(url="/instructors", status_code=303)
 
 
@@ -723,6 +750,33 @@ async def instructor_update(
     }
 
     store.set("instructors", instructor_id, instructor_data)
+
+    classes_coll = store.get_collection("classes")
+    for cid in class_ids_list:
+        if cid in classes_coll:
+            cls = store.get("classes", cid)
+            if cls:
+                cls["instructor_id"] = instructor_id
+                store.set("classes", cid, cls)
+    for cid in classes_coll:
+        c = store.get("classes", cid)
+        if c and c.get("instructor_id") == instructor_id and cid not in class_ids_list:
+            c["instructor_id"] = None
+            store.set("classes", cid, c)
+
+    dances_coll = store.get_collection("dances")
+    for did in dance_ids_list:
+        if did in dances_coll:
+            dance = store.get("dances", did)
+            if dance:
+                dance["instructor_id"] = instructor_id
+                store.set("dances", did, dance)
+    for did in dances_coll:
+        d = store.get("dances", did)
+        if d and d.get("instructor_id") == instructor_id and did not in dance_ids_list:
+            d["instructor_id"] = None
+            store.set("dances", did, d)
+
     return RedirectResponse(url="/instructors", status_code=303)
 
 

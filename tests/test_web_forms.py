@@ -1202,6 +1202,12 @@ class TestInstructorFormMultiSelect:
         assert new_instructor is not None
         assert set(new_instructor["class_ids"]) == {"c1", "c2"}
         assert set(new_instructor["dance_ids"]) == {"dance1"}
+        class_c1 = store.get("classes", "c1")
+        assert class_c1["instructor_id"] == "new-instructor"
+        class_c2 = store.get("classes", "c2")
+        assert class_c2["instructor_id"] == "new-instructor"
+        dance_dance1 = store.get("dances", "dance1")
+        assert dance_dance1["instructor_id"] == "new-instructor"
 
     def test_instructor_update_with_multi_select(self):
         """Updating an instructor with multi-select replaces selections."""
@@ -1212,8 +1218,19 @@ class TestInstructorFormMultiSelect:
             {
                 "id": "i1",
                 "name": "Jane Instructor",
-                "class_ids": ["c1"],
+                "class_ids": [],
                 "dance_ids": [],
+            },
+        )
+        store.set(
+            "classes",
+            "c1",
+            {
+                "id": "c1",
+                "name": "Ballet Class",
+                "instructor_id": "i1",
+                "team_ids": [],
+                "dancer_ids": [],
             },
         )
         app = create_app_with_store(store)
@@ -1230,6 +1247,12 @@ class TestInstructorFormMultiSelect:
         updated = store.get("instructors", "i1")
         assert set(updated["class_ids"]) == {"c2"}
         assert set(updated["dance_ids"]) == {"dance1", "dance2"}
+        class_c2 = store.get("classes", "c2")
+        assert class_c2["instructor_id"] == "i1"
+        class_c1 = store.get("classes", "c1")
+        assert class_c1.get("instructor_id") is None
+        dance_dance1 = store.get("dances", "dance1")
+        assert dance_dance1["instructor_id"] == "i1"
 
     def test_instructor_create_with_no_selections(self):
         """Creating an instructor with no classes or dances saves empty lists."""
