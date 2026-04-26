@@ -748,6 +748,89 @@ class TestClassForm:
         assert response.status_code == 200
         assert "form" in response.text.lower()
 
+    def test_class_edit_form_uses_team_dropdown(self):
+        """Edit class form uses a select dropdown for teams, not a text input."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = DataStore(path=os.path.join(tmp_dir, "store.json"))
+            store.set(
+                "teams", "t1", {"id": "t1", "name": "Team Alpha", "dancer_ids": []}
+            )
+            store.set(
+                "teams", "t2", {"id": "t2", "name": "Team Beta", "dancer_ids": []}
+            )
+            store.set(
+                "classes",
+                "c1",
+                {
+                    "id": "c1",
+                    "name": "Ballet Class",
+                    "instructor_id": None,
+                    "team_ids": ["t1"],
+                    "dancer_ids": [],
+                },
+            )
+
+        app = create_app_with_store(store)
+        client = TestClient(app)
+        response = client.get("/classes/c1/edit")
+        assert response.status_code == 200
+        # Should use a select element, not an input text field
+        assert '<select id="team_ids"' in response.text
+        assert 'name="team_ids" multiple' in response.text
+        # Pre-selected team should have selected attribute
+        assert 'value="t1"' in response.text
+        assert "selected" in response.text
+
+    def test_class_create_with_teams(self):
+        """Creating a class with teams saves them correctly."""
+        tmp_dir = tempfile.mkdtemp()
+        store = DataStore(path=os.path.join(tmp_dir, "store.json"))
+        store.set("teams", "t1", {"id": "t1", "name": "Team Alpha", "dancer_ids": []})
+        store.set("teams", "t2", {"id": "t2", "name": "Team Beta", "dancer_ids": []})
+
+        app = create_app_with_store(store)
+        client = TestClient(app, follow_redirects=False)
+        resp = client.post(
+            "/classes",
+            data={"name": "New Class", "instructor_id": "", "team_ids": ["t1", "t2"]},
+        )
+        assert resp.status_code == 303
+
+        new_class = store.get("classes", "new-class")
+        assert new_class is not None
+        assert set(new_class["team_ids"]) == {"t1", "t2"}
+
+    def test_class_update_with_teams(self):
+        """Updating a class with teams saves them correctly."""
+        tmp_dir = tempfile.mkdtemp()
+        store = DataStore(path=os.path.join(tmp_dir, "store.json"))
+        store.set("teams", "t1", {"id": "t1", "name": "Team Alpha", "dancer_ids": []})
+        store.set("teams", "t2", {"id": "t2", "name": "Team Beta", "dancer_ids": []})
+        store.set(
+            "classes",
+            "c1",
+            {
+                "id": "c1",
+                "name": "Old Name",
+                "instructor_id": None,
+                "team_ids": ["t1"],
+                "dancer_ids": [],
+            },
+        )
+
+        app = create_app_with_store(store)
+        client = TestClient(app, follow_redirects=False)
+        resp = client.post(
+            "/classes/c1",
+            data={"name": "Updated Name", "instructor_id": "", "team_ids": ["t2"]},
+        )
+        assert resp.status_code == 303
+
+        updated_class = store.get("classes", "c1")
+        assert updated_class is not None
+        assert updated_class["name"] == "Updated Name"
+        assert set(updated_class["team_ids"]) == {"t2"}
+
 
 class TestInstructorForm:
     """Tests for the instructor form."""

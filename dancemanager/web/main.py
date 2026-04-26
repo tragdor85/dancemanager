@@ -478,26 +478,24 @@ async def class_create(request: Request, store: DataStore = Depends(store_depend
     form = await request.form()
     name = form.get("name")
     instructor_id = form.get("instructor_id")
-    team_ids = form.get("team_ids", "")
+    team_ids = form.getlist("team_ids")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    team_ids_list = [t.strip() for t in team_ids.split(",") if t.strip()]
 
     class_id = make_class_id(name)
     class_data = {
         "id": class_id,
         "name": name,
         "instructor_id": instructor_id if instructor_id else None,
-        "team_ids": team_ids_list if team_ids_list else [],
+        "team_ids": team_ids if team_ids else [],
         "dancer_ids": [],
     }
 
     store.set("classes", class_id, class_data)
 
     # Sync: add this class to all dancers in assigned teams
-    for tid in team_ids_list:
+    for tid in team_ids:
         for did, dancer in store.get_collection("dancers").items():
             if dancer.get("team_id") == tid:
                 class_ids = list(dancer.get("class_ids", []))
@@ -526,12 +524,10 @@ async def class_update(
     form = await request.form()
     name = form.get("name")
     instructor_id = form.get("instructor_id")
-    team_ids = form.get("team_ids", "")
+    team_ids = form.getlist("team_ids")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    team_ids_list = [t.strip() for t in team_ids.split(",") if t.strip()]
 
     # Remove this class from old teams' dancers' class_ids
     existing_class = store.get("classes", class_id)
@@ -551,14 +547,14 @@ async def class_update(
         "id": class_id,
         "name": name,
         "instructor_id": instructor_id if instructor_id else None,
-        "team_ids": team_ids_list if team_ids_list else [],
+        "team_ids": team_ids if team_ids else [],
         "dancer_ids": [],
     }
 
     store.set("classes", class_id, class_data)
 
     # Sync: add this class to all dancers in assigned teams
-    for tid in team_ids_list:
+    for tid in team_ids:
         for did, dancer in store.get_collection("dancers").items():
             if dancer.get("team_id") == tid:
                 class_ids = list(dancer.get("class_ids", []))

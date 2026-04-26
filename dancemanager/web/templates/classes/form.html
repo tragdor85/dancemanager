@@ -55,7 +55,11 @@
                   </div>
                   <div class="form-group">
                       <label for="team_ids">Teams:</label>
-                      <input type="text" id="team_ids" name="team_ids" value="{{ class.team_ids }}">
+                      <select id="team_ids" name="team_ids" multiple>
+                          {% for team in teams %}
+                          <option value="{{ team.id }}" {% if team.id in (class.team_ids if class.team_ids is iterable else []) %}selected{% endif %}>{{ team.name }}</option>
+                          {% endfor %}
+                      </select>
                   </div>
                   <div class="btn-group">
                       <a href="/classes" class="btn btn-secondary">Cancel</a>
