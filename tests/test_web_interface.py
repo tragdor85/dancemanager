@@ -65,7 +65,12 @@ def seed_data(store):
     store.set(
         "dancers",
         "alice",
-        {"id": "alice", "name": "Alice Smith", "class_ids": ["ballet"], "team_id": "red"},
+        {
+            "id": "alice",
+            "name": "Alice Smith",
+            "class_ids": ["ballet"],
+            "team_id": "red",
+        },
     )
     store.set(
         "dancers",
@@ -118,6 +123,7 @@ def seed_data(store):
 # 1. Dashboard / index page
 # ──────────────────────────────────────────────────────────────────────
 
+
 class TestDashboardIndex:
     """Tests for GET / (dashboard/index)."""
 
@@ -146,13 +152,14 @@ class TestDashboardIndex:
 # 2. List pages (GET /dancers, /teams, etc.)
 # ──────────────────────────────────────────────────────────────────────
 
+
 class TestListPages:
     """Tests for all list endpoints."""
 
     # -- Dancers list --
     def test_dancers_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -161,7 +168,7 @@ class TestListPages:
 
     def test_dancers_list_shows_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -175,7 +182,7 @@ class TestListPages:
 
     def test_dancers_list_search(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -185,7 +192,7 @@ class TestListPages:
 
     def test_dancers_list_search_no_match(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -194,7 +201,7 @@ class TestListPages:
 
     def test_dancers_list_case_insensitive(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -204,7 +211,7 @@ class TestListPages:
     # -- Teams list --
     def test_teams_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -213,7 +220,7 @@ class TestListPages:
 
     def test_teams_list_shows_teams(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -223,7 +230,7 @@ class TestListPages:
     # -- Classes list --
     def test_classes_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -232,7 +239,7 @@ class TestListPages:
 
     def test_classes_list_shows_classes(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -242,7 +249,7 @@ class TestListPages:
     # -- Instructors list --
     def test_instructors_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -251,7 +258,7 @@ class TestListPages:
 
     def test_instructors_list_shows_instructors(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -261,7 +268,7 @@ class TestListPages:
     # -- Dances list --
     def test_dances_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -270,7 +277,7 @@ class TestListPages:
 
     def test_dances_list_shows_dances(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -280,7 +287,7 @@ class TestListPages:
     # -- Recitals list --
     def test_recitals_list_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -289,24 +296,169 @@ class TestListPages:
 
     def test_recitals_list_shows_recitals(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
         resp = client.get("/recitals")
         assert "Spring Showcase" in resp.text
 
+    # -- Teams list count columns --
+    def test_teams_list_shows_dancer_count(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/teams")
+        assert resp.status_code == 200
+        # Alice has team_id="red" so Red Team should show dancer count of 1
+        assert "Red Team" in resp.text
+
+    def test_teams_list_shows_zero_for_team_without_dancers(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        # Bob has team_id=None, so teams list should handle this gracefully
+        client, _ = make_test_client(store)
+        resp = client.get("/teams")
+        assert resp.status_code == 200
+
+    # -- Classes list count columns --
+    def test_classes_list_shows_team_count(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        # Assign Red Team to Ballet class via assignment table
+        store.execute(
+            "INSERT OR IGNORE INTO class_team_assignments (class_id, team_id) VALUES (?, ?)",
+            ("ballet", "red"),
+        )
+
+        client, _ = make_test_client(store)
+        resp = client.get("/classes")
+        assert resp.status_code == 200
+        assert "Ballet Basics" in resp.text
+
+    def test_classes_list_shows_zero_teams(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/classes")
+        assert resp.status_code == 200
+
+    # -- Instructors list count columns --
+    def test_instructors_list_shows_class_and_dance_counts(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/instructors")
+        assert resp.status_code == 200
+        # Jane Doe teaches Ballet Basics and Waltz dance
+        assert "Jane Doe" in resp.text
+
+    def test_instructors_list_shows_zero_counts(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        # Create instructor with no classes or dances assigned
+        store.set(
+            "instructors",
+            "john",
+            {"id": "john", "name": "John Smith", "class_ids": [], "dance_ids": []},
+        )
+
+        client, _ = make_test_client(store)
+        resp = client.get("/instructors")
+        assert resp.status_code == 200
+        assert "John Smith" in resp.text
+
+    # -- Dances list count columns --
+    def test_dances_list_shows_dancer_count(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/dances")
+        assert resp.status_code == 200
+        assert "Waltz" in resp.text
+
+    def test_dances_list_shows_zero_dancers(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        # Create dance with no dancers assigned
+        store.set(
+            "dances",
+            "salsa",
+            {
+                "id": "salsa",
+                "name": "Salsa",
+                "song_name": "Rhythm",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
+
+        client, _ = make_test_client(store)
+        resp = client.get("/dances")
+        assert resp.status_code == 200
+        assert "Salsa" in resp.text
+
+    # -- Dancers list count columns --
+    def test_dancers_list_shows_class_count(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        # Alice is assigned to Ballet Basics class
+        assert "Alice Smith" in resp.text
+
+    def test_dancers_list_shows_zero_classes(self):
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_data(store)
+
+        client, _ = make_test_client(store)
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        # Bob has no class_ids so should show 0 classes
+
 
 # ──────────────────────────────────────────────────────────────────────
 # 3. Detail pages (GET /dancers/{id}, etc.)
 # ──────────────────────────────────────────────────────────────────────
+
 
 class TestDetailPages:
     """Tests for all detail endpoints."""
 
     def test_dancer_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -315,7 +467,7 @@ class TestDetailPages:
 
     def test_dancer_detail_shows_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -324,7 +476,7 @@ class TestDetailPages:
 
     def test_dancer_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -333,7 +485,7 @@ class TestDetailPages:
 
     def test_team_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -342,7 +494,7 @@ class TestDetailPages:
 
     def test_team_detail_shows_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -351,7 +503,7 @@ class TestDetailPages:
 
     def test_team_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -360,7 +512,7 @@ class TestDetailPages:
 
     def test_class_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -369,7 +521,7 @@ class TestDetailPages:
 
     def test_class_detail_shows_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -378,7 +530,7 @@ class TestDetailPages:
 
     def test_class_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -387,7 +539,7 @@ class TestDetailPages:
 
     def test_instructor_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -396,7 +548,7 @@ class TestDetailPages:
 
     def test_instructor_detail_shows_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -405,7 +557,7 @@ class TestDetailPages:
 
     def test_instructor_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -414,7 +566,7 @@ class TestDetailPages:
 
     def test_dance_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -423,7 +575,7 @@ class TestDetailPages:
 
     def test_dance_detail_shows_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -432,7 +584,7 @@ class TestDetailPages:
 
     def test_dance_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -441,7 +593,7 @@ class TestDetailPages:
 
     def test_recital_detail_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -450,7 +602,7 @@ class TestDetailPages:
 
     def test_recital_detail_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -462,42 +614,49 @@ class TestDetailPages:
 # 4. Create endpoints (POST /dancers, /teams, etc.)
 # ──────────────────────────────────────────────────────────────────────
 
+
 class TestCreateEndpoints:
     """Tests for all POST create endpoints."""
 
     # -- Dancer creation --
     def test_create_dancer_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dancers", data={"name": "Carol White", "class_ids": "", "team_id": ""})
+        resp = client.post(
+            "/dancers", data={"name": "Carol White", "class_ids": "", "team_id": ""}
+        )
         assert resp.status_code == 303
 
     def test_create_dancer_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/dancers", data={"name": "Carol White", "class_ids": "", "team_id": ""})
+        client.post(
+            "/dancers", data={"name": "Carol White", "class_ids": "", "team_id": ""}
+        )
         dancer = store.get("dancers", "carol-white")
         assert dancer is not None
         assert dancer["name"] == "Carol White"
 
     def test_create_dancer_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dancers", data={"name": "", "class_ids": "", "team_id": ""})
+        resp = client.post(
+            "/dancers", data={"name": "", "class_ids": "", "team_id": ""}
+        )
         assert resp.status_code == 400
 
     def test_create_dancer_no_name_required(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -507,7 +666,7 @@ class TestCreateEndpoints:
     # -- Team creation --
     def test_create_team_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -516,7 +675,7 @@ class TestCreateEndpoints:
 
     def test_create_team_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -527,7 +686,7 @@ class TestCreateEndpoints:
 
     def test_create_team_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -536,7 +695,7 @@ class TestCreateEndpoints:
 
     def test_create_team_assigns_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -547,106 +706,141 @@ class TestCreateEndpoints:
     # -- Class creation --
     def test_create_class_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/classes", data={"name": "Tap Dance", "instructor_id": "", "team_ids": ""})
+        resp = client.post(
+            "/classes", data={"name": "Tap Dance", "instructor_id": "", "team_ids": ""}
+        )
         assert resp.status_code == 303
 
     def test_create_class_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/classes", data={"name": "Tap Dance", "instructor_id": "", "team_ids": ""})
+        client.post(
+            "/classes", data={"name": "Tap Dance", "instructor_id": "", "team_ids": ""}
+        )
         cls = store.get("classes", "tap-dance")
         assert cls is not None
         assert cls["name"] == "Tap Dance"
 
     def test_create_class_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/classes", data={"name": "", "instructor_id": "", "team_ids": ""})
+        resp = client.post(
+            "/classes", data={"name": "", "instructor_id": "", "team_ids": ""}
+        )
         assert resp.status_code == 400
 
     # -- Instructor creation --
     def test_create_instructor_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/instructors", data={"name": "John Smith", "class_ids": "", "dance_ids": ""})
+        resp = client.post(
+            "/instructors",
+            data={"name": "John Smith", "class_ids": "", "dance_ids": ""},
+        )
         assert resp.status_code == 303
 
     def test_create_instructor_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/instructors", data={"name": "John Smith", "class_ids": "", "dance_ids": ""})
+        client.post(
+            "/instructors",
+            data={"name": "John Smith", "class_ids": "", "dance_ids": ""},
+        )
         inst = store.get("instructors", "john-smith")
         assert inst is not None
         assert inst["name"] == "John Smith"
 
     def test_create_instructor_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/instructors", data={"name": "", "class_ids": "", "dance_ids": ""})
+        resp = client.post(
+            "/instructors", data={"name": "", "class_ids": "", "dance_ids": ""}
+        )
         assert resp.status_code == 400
 
     # -- Dance creation --
     def test_create_dance_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dances", data={"name": "Salsa", "song_name": "Ritmo", "instructor_id": "", "dancer_ids": ""})
+        resp = client.post(
+            "/dances",
+            data={
+                "name": "Salsa",
+                "song_name": "Ritmo",
+                "instructor_id": "",
+                "dancer_ids": "",
+            },
+        )
         assert resp.status_code == 303
 
     def test_create_dance_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/dances", data={"name": "Salsa", "song_name": "Ritmo", "instructor_id": "", "dancer_ids": ""})
+        client.post(
+            "/dances",
+            data={
+                "name": "Salsa",
+                "song_name": "Ritmo",
+                "instructor_id": "",
+                "dancer_ids": "",
+            },
+        )
         dance = store.get("dances", "salsa")
         assert dance is not None
         assert dance["name"] == "Salsa"
 
     def test_create_dance_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dances", data={"name": "", "song_name": "", "instructor_id": "", "dancer_ids": ""})
+        resp = client.post(
+            "/dances",
+            data={"name": "", "song_name": "", "instructor_id": "", "dancer_ids": ""},
+        )
         assert resp.status_code == 400
 
     # -- Recital creation --
     def test_create_recital_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/recitals", data={"name": "Fall Gala", "performance_order": ""})
+        resp = client.post(
+            "/recitals", data={"name": "Fall Gala", "performance_order": ""}
+        )
         assert resp.status_code == 303
 
     def test_create_recital_stores_data(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -657,7 +851,7 @@ class TestCreateEndpoints:
 
     def test_create_recital_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -669,61 +863,74 @@ class TestCreateEndpoints:
 # 5. Update endpoints (POST /dancers/{id}, etc.)
 # ──────────────────────────────────────────────────────────────────────
 
+
 class TestUpdateEndpoints:
     """Tests for all POST update endpoints."""
 
     # -- Dancer update --
     def test_update_dancer_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dancers/alice", data={"name": "Alice Updated", "class_ids": "", "team_id": ""})
+        resp = client.post(
+            "/dancers/alice",
+            data={"name": "Alice Updated", "class_ids": "", "team_id": ""},
+        )
         assert resp.status_code == 303
 
     def test_update_dancer_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/dancers/alice", data={"name": "Alice Updated", "class_ids": "", "team_id": ""})
+        client.post(
+            "/dancers/alice",
+            data={"name": "Alice Updated", "class_ids": "", "team_id": ""},
+        )
         dancer = store.get("dancers", "alice")
         assert dancer["name"] == "Alice Updated"
 
     def test_update_dancer_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dancers/alice", data={"name": "", "class_ids": "", "team_id": ""})
+        resp = client.post(
+            "/dancers/alice", data={"name": "", "class_ids": "", "team_id": ""}
+        )
         assert resp.status_code == 400
 
     def test_update_dancer_assigns_team(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/dancers/alice", data={"name": "Alice", "class_ids": "", "team_id": "red"})
+        client.post(
+            "/dancers/alice", data={"name": "Alice", "class_ids": "", "team_id": "red"}
+        )
         dancer = store.get("dancers", "alice")
         assert dancer["team_id"] == "red"
 
     # -- Team update --
     def test_update_team_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/teams/red", data={"name": "Red Team Updated", "dancer_ids": ""})
+        resp = client.post(
+            "/teams/red", data={"name": "Red Team Updated", "dancer_ids": ""}
+        )
         assert resp.status_code == 303
 
     def test_update_team_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -733,7 +940,7 @@ class TestUpdateEndpoints:
 
     def test_update_team_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -742,7 +949,7 @@ class TestUpdateEndpoints:
 
     def test_update_team_removes_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -753,7 +960,7 @@ class TestUpdateEndpoints:
 
     def test_update_team_adds_dancers(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -764,117 +971,160 @@ class TestUpdateEndpoints:
     # -- Class update --
     def test_update_class_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/classes/ballet", data={"name": "Ballet Advanced", "instructor_id": "", "team_ids": ""})
+        resp = client.post(
+            "/classes/ballet",
+            data={"name": "Ballet Advanced", "instructor_id": "", "team_ids": ""},
+        )
         assert resp.status_code == 303
 
     def test_update_class_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/classes/ballet", data={"name": "Ballet Advanced", "instructor_id": "", "team_ids": ""})
+        client.post(
+            "/classes/ballet",
+            data={"name": "Ballet Advanced", "instructor_id": "", "team_ids": ""},
+        )
         cls = store.get("classes", "ballet")
         assert cls["name"] == "Ballet Advanced"
 
     def test_update_class_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/classes/ballet", data={"name": "", "instructor_id": "", "team_ids": ""})
+        resp = client.post(
+            "/classes/ballet", data={"name": "", "instructor_id": "", "team_ids": ""}
+        )
         assert resp.status_code == 400
 
     # -- Instructor update --
     def test_update_instructor_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/instructors/jane", data={"name": "Jane Updated", "class_ids": "", "dance_ids": ""})
+        resp = client.post(
+            "/instructors/jane",
+            data={"name": "Jane Updated", "class_ids": "", "dance_ids": ""},
+        )
         assert resp.status_code == 303
 
     def test_update_instructor_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/instructors/jane", data={"name": "Jane Updated", "class_ids": "", "dance_ids": ""})
+        client.post(
+            "/instructors/jane",
+            data={"name": "Jane Updated", "class_ids": "", "dance_ids": ""},
+        )
         inst = store.get("instructors", "jane")
         assert inst["name"] == "Jane Updated"
 
     def test_update_instructor_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/instructors/jane", data={"name": "", "class_ids": "", "dance_ids": ""})
+        resp = client.post(
+            "/instructors/jane", data={"name": "", "class_ids": "", "dance_ids": ""}
+        )
         assert resp.status_code == 400
 
     # -- Dance update --
     def test_update_dance_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dances/waltz", data={"name": "Waltz Advanced", "song_name": "New Song", "instructor_id": "", "dancer_ids": ""})
+        resp = client.post(
+            "/dances/waltz",
+            data={
+                "name": "Waltz Advanced",
+                "song_name": "New Song",
+                "instructor_id": "",
+                "dancer_ids": "",
+            },
+        )
         assert resp.status_code == 303
 
     def test_update_dance_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/dances/waltz", data={"name": "Waltz Advanced", "song_name": "New Song", "instructor_id": "", "dancer_ids": ""})
+        client.post(
+            "/dances/waltz",
+            data={
+                "name": "Waltz Advanced",
+                "song_name": "New Song",
+                "instructor_id": "",
+                "dancer_ids": "",
+            },
+        )
         dance = store.get("dances", "waltz")
         assert dance["name"] == "Waltz Advanced"
 
     def test_update_dance_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/dances/waltz", data={"name": "", "song_name": "", "instructor_id": "", "dancer_ids": ""})
+        resp = client.post(
+            "/dances/waltz",
+            data={"name": "", "song_name": "", "instructor_id": "", "dancer_ids": ""},
+        )
         assert resp.status_code == 400
 
     # -- Recital update --
     def test_update_recital_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/recitals/spring", data={"name": "Spring Showcase Updated", "performance_order": ""})
+        resp = client.post(
+            "/recitals/spring",
+            data={"name": "Spring Showcase Updated", "performance_order": ""},
+        )
         assert resp.status_code == 303
 
     def test_update_recital_changes_name(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        client.post("/recitals/spring", data={"name": "Spring Showcase Updated", "performance_order": ""})
+        client.post(
+            "/recitals/spring",
+            data={"name": "Spring Showcase Updated", "performance_order": ""},
+        )
         recital = store.get("recitals", "spring")
         assert recital["name"] == "Spring Showcase Updated"
 
     def test_update_recital_no_name_400(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
-        resp = client.post("/recitals/spring", data={"name": "", "performance_order": ""})
+        resp = client.post(
+            "/recitals/spring", data={"name": "", "performance_order": ""}
+        )
         assert resp.status_code == 400
 
 
@@ -882,12 +1132,13 @@ class TestUpdateEndpoints:
 # 6. Delete endpoints (DELETE /dancers/{id}, etc.)
 # ──────────────────────────────────────────────────────────────────────
 
+
 class TestDeleteEndpoints:
     """Tests for all DELETE endpoints."""
 
     def test_delete_dancer_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -898,7 +1149,7 @@ class TestDeleteEndpoints:
 
     def test_delete_dancer_redirects_to_list(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -907,7 +1158,7 @@ class TestDeleteEndpoints:
 
     def test_delete_team_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         # Clear team_id from dancers to avoid FK constraint
@@ -923,7 +1174,7 @@ class TestDeleteEndpoints:
 
     def test_delete_class_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -934,7 +1185,7 @@ class TestDeleteEndpoints:
 
     def test_delete_instructor_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         # Clear instructor_id from classes and dances to avoid FK constraint
@@ -954,7 +1205,7 @@ class TestDeleteEndpoints:
 
     def test_delete_dance_success(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -966,7 +1217,7 @@ class TestDeleteEndpoints:
     def test_delete_recital_success(self):
         """DELETE /recitals/{recital_id} should work (bug fix)."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -978,7 +1229,7 @@ class TestDeleteEndpoints:
     def test_delete_recital_redirects_to_list(self):
         """DELETE /recitals/{recital_id} should redirect to /recitals."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         seed_data(store)
         client, _ = make_test_client(store)
@@ -1074,7 +1325,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_page_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1083,7 +1334,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_page_shows_schedule(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1092,7 +1343,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_page_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         client, _ = make_test_client(store)
         resp = client.get("/recitals/nonexistent/schedule")
@@ -1100,7 +1351,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_generate_200(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1109,7 +1360,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_generate_saves_order(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1121,7 +1372,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_generate_requires_min_two_dances(self):
         """Schedule generation with <2 dances should return 400."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         store.set(
             "recitals",
@@ -1135,12 +1386,17 @@ class TestRecitalScheduleGeneration:
     def test_schedule_generate_single_dance(self):
         """Schedule generation with only 1 dance should return 400."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         store.set(
             "recitals",
             "spring",
-            {"id": "spring", "name": "Spring", "performance_order": ["waltz"], "notes": ""},
+            {
+                "id": "spring",
+                "name": "Spring",
+                "performance_order": ["waltz"],
+                "notes": "",
+            },
         )
         client, _ = make_test_client(store)
         resp = client.get("/recitals/spring/schedule-generate")
@@ -1148,7 +1404,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_generate_404(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         client, _ = make_test_client(store)
         resp = client.get("/recitals/nonexistent/schedule-generate")
@@ -1156,7 +1412,7 @@ class TestRecitalScheduleGeneration:
 
     def test_schedule_generate_redirects_to_schedule(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1166,7 +1422,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_with_legacy_order_format(self):
         """Test schedule page handles legacy string-based performance_order."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         # Override with legacy format (list of dance_id strings instead of dicts)
@@ -1180,7 +1436,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_empty_order(self):
         """Schedule page with no dances in order should still work."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         recital = store.get("recitals", "spring")
@@ -1193,7 +1449,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_missing_dance_in_order(self):
         """Schedule page should handle missing dance IDs gracefully."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         recital = store.get("recitals", "spring")
@@ -1207,7 +1463,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_generate_updates_recital(self):
         """Verify schedule-generate actually updates the recital in store."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1229,7 +1485,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_shows_dancer_names(self):
         """Schedule page should include dancer names for each slot."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1239,7 +1495,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_shows_song_names(self):
         """Schedule page should include song names."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1249,7 +1505,7 @@ class TestRecitalScheduleGeneration:
     def test_schedule_page_shows_positions(self):
         """Schedule page should show position numbers."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         client, _ = make_test_client(store)
@@ -1262,7 +1518,7 @@ class TestRecitalScheduleGenerationEdgeCases:
 
     def test_schedule_generate_no_dances_in_recital(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         store.set(
             "recitals",
@@ -1275,7 +1531,7 @@ class TestRecitalScheduleGenerationEdgeCases:
 
     def test_schedule_page_empty_recital(self):
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         store.set(
             "recitals",
@@ -1289,7 +1545,7 @@ class TestRecitalScheduleGenerationEdgeCases:
     def test_schedule_generate_with_no_dancer_conflicts(self):
         """When no dancer is in multiple dances, any order works."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         store.set(
             "dancers",
@@ -1337,7 +1593,7 @@ class TestRecitalScheduleGenerationEdgeCases:
     def test_schedule_page_with_dict_order_format(self):
         """Schedule page handles dict-based performance_order."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         setup_recital_with_dances(store)
         recital = store.get("recitals", "spring")
@@ -1354,14 +1610,19 @@ class TestRecitalScheduleGenerationEdgeCases:
     def test_schedule_generate_constrained_dancers(self):
         """Schedule generation with many conflicts should still produce valid schedule."""
         tmp_dir = tempfile.mkdtemp()
-        path = os.path.join(tmp_dir, 'test_store.json')
+        path = os.path.join(tmp_dir, "test_store.json")
         store = DataStore(path=path)
         # All dancers in all dances -> maximum conflict
         for i in range(3):
             store.set(
                 "dancers",
                 f"dancer{i}",
-                {"id": f"dancer{i}", "name": f"Dancer {i}", "class_ids": [], "team_id": None},
+                {
+                    "id": f"dancer{i}",
+                    "name": f"Dancer {i}",
+                    "class_ids": [],
+                    "team_id": None,
+                },
             )
         dance_names = ["waltz", "hiphop", "jazz", "tap", "swing", "contemp"]
         for dn in dance_names:

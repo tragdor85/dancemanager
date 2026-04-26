@@ -67,6 +67,10 @@ async def dancers(
     team_map = {tid: t["name"] for tid, t in teams.items()}
     for d in all_dancers:
         d["team_name"] = team_map.get(d.get("team_id"), "")
+        class_ids = d.get("class_ids") or []
+        if not isinstance(class_ids, list):
+            class_ids = []
+        d["class_count"] = len(class_ids)
 
     return templates.TemplateResponse(
         request,
@@ -244,7 +248,11 @@ async def dancer_delete(
 @router.get("/teams")
 async def teams_list(request: Request, store: DataStore = Depends(store_dependency)):
     teams_coll = store.get_collection("teams")
+    dancers = list(store.get_collection("dancers").values())
     teams = [{"id": tid, **t} for tid, t in teams_coll.items()]
+    for team in teams:
+        dancer_ids = [d["id"] for d in dancers if d.get("team_id") == team["id"]]
+        team["dancer_count"] = len(dancer_ids)
     return templates.TemplateResponse(
         request,
         "teams/list.html",
@@ -372,7 +380,27 @@ async def team_delete(
 @router.get("/classes")
 async def classes_list(request: Request, store: DataStore = Depends(store_dependency)):
     classes_coll = store.get_collection("classes")
+    teams_coll = store.get_collection("teams")
+    dancers = list(store.get_collection("dancers").values())
     classes = [{"id": cid, **c} for cid, c in classes_coll.items()]
+
+    team_dancer_map = {}
+    for t in teams_coll.values():
+        tid = t["id"] if isinstance(t, dict) else t
+        if isinstance(t, dict):
+            tid = t.get("id")
+        team_dancers = [d["id"] for d in dancers if d.get("team_id") == tid]
+        team_dancer_map[tid] = len(team_dancers)
+
+    for cls in classes:
+        class_id = cls["id"]
+        result = store.query(
+            "SELECT COUNT(DISTINCT team_id) as cnt "
+            "FROM class_team_assignments WHERE class_id = ?",
+            (class_id,),
+        )
+        cls["team_count"] = result[0]["cnt"] if result else 0
+
     return templates.TemplateResponse(
         request,
         "classes/list.html",
@@ -568,7 +596,17 @@ async def instructors_list(
     request: Request, store: DataStore = Depends(store_dependency)
 ):
     instructors_coll = store.get_collection("instructors")
+    classes = list(store.get_collection("classes").values())
+    dances = list(store.get_collection("dances").values())
     instructors = [{"id": iid, **i} for iid, i in instructors_coll.items()]
+
+    for instructor in instructors:
+        inst_id = instructor["id"]
+        class_count = len([c for c in classes if c.get("instructor_id") == inst_id])
+        dance_count = len([d for d in dances if d.get("instructor_id") == inst_id])
+        instructor["class_count"] = class_count
+        instructor["dance_count"] = dance_count
+
     return templates.TemplateResponse(
         request,
         "instructors/list.html",
@@ -713,6 +751,16 @@ async def instructor_delete(
 async def dances_list(request: Request, store: DataStore = Depends(store_dependency)):
     dances_coll = store.get_collection("dances")
     dances = [{"id": did, **d} for did, d in dances_coll.items()]
+
+    for dance in dances:
+        dance_id = dance["id"]
+        result = store.query(
+            "SELECT COUNT(DISTINCT dancer_id) as cnt "
+            "FROM dance_assignments WHERE dance_id = ?",
+            (dance_id,),
+        )
+        dance["dancer_count"] = result[0]["cnt"] if result else 0
+
     return templates.TemplateResponse(
         request,
         "dances/list.html",
@@ -745,8 +793,14 @@ async def dance_detail(
     if not dance:
         return HTMLResponse("Dance not found", status_code=404)
 
-    dancers = list(store.get_collection("dancers").values())
-    dance_dancers = [d for d in dancers if dance_id in d.get("dancer_ids", [])]
+    dancers_coll = store.get_collection("dancers")
+    all_dancers = list(dancers_coll.values())
+
+    result = store.query(
+        "SELECT dancer_id FROM dance_assignments WHERE dance_id = ?", (dance_id,)
+    )
+    assigned_ids = {row["dancer_id"] for row in result} if result else set()
+    dance_dancers = [d for d in all_dancers if d["id"] in assigned_ids]
 
     return templates.TemplateResponse(
         request,

@@ -56,7 +56,7 @@
                     <td><a href="/dances/{{ dance.id }}">{{ dance.name }}</a></td>
                     <td>{{ dance.song_name or '-' }}</td>
                     <td>{{ dance.instructor_id or '-' }}</td>
-                    <td>{{ dance.dancer_ids|length }}</td>
+                    <td>{{ dance.dancer_count }}</td>
                     <td>
                         <a href="/dances/{{ dance.id }}">Detail</a> |
                         <a href="/dances/{{ dance.id }}/edit">Edit</a>

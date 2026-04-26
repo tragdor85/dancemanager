@@ -53,8 +53,8 @@
                {% for instructor in instructors %}
                <tr>
                    <td><a href="/instructors/{{ instructor.id }}">{{ instructor.name }}</a></td>
-                   <td>{{ instructor.class_ids|length }}</td>
-                   <td>{{ instructor.dance_ids|length }}</td>
+                  <td>{{ instructor.class_count }}</td>
+                    <td>{{ instructor.dance_count }}</td>
                    <td>
                        <a href="/instructors/{{ instructor.id }}">Detail</a> |
                        <a href="/instructors/{{ instructor.id }}/edit">Edit</a>

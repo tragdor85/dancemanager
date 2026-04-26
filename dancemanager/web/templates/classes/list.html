@@ -54,7 +54,7 @@
                  <tr>
                      <td><a href="/classes/{{ class_obj.id }}">{{ class_obj.name }}</a></td>
                      <td>{{ class_obj.instructor_id or '-' }}</td>
-                     <td>{{ class_obj.team_ids|length }}</td>
+                     <td>{{ class_obj.team_count }}</td>
                      <td>
                          <a href="/classes/{{ class_obj.id }}">Detail</a> |
                          <a href="/classes/{{ class_obj.id }}/edit">Edit</a>

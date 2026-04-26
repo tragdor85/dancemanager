@@ -52,7 +52,7 @@
                     {% for team in teams %}
                     <tr>
                         <td><a href="/teams/{{ team.id }}">{{ team.name }}</a></td>
-                        <td>{{ team.dancer_ids|length }}</td>
+                        <td>{{ team.dancer_count }}</td>
                         <td>
                             <a href="/teams/{{ team.id }}">Detail</a> |
                             <a href="/teams/{{ team.id }}/edit">Edit</a>

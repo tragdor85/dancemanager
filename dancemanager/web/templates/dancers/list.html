@@ -57,7 +57,7 @@
                  {% for dancer in dancers %}
                  <tr>
                      <td><a href="/dancers/{{ dancer.id }}">{{ dancer.name }}</a></td>
-                     <td>{{ dancer.class_ids|length }}</td>
+                     <td>{{ dancer.class_count }}</td>
                      <td>{{ dancer.team_name or '-' }}</td>
                      <td>
                          <a href="/dancers/{{ dancer.id }}">Detail</a> |
