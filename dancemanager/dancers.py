@@ -3,7 +3,7 @@
 Provides commands to add, list, show, remove, and export dancers.
 """
 
-from typing import Optional
+import json
 
 import click
 
@@ -25,9 +25,9 @@ def add(ctx, name, team):
     """Add a dancer by name, optionally assigning to a team."""
     store = get_store()
     store.execute(
-        "INSERT OR REPLACE INTO dancers (id, name, team_id, notes) "
-        "VALUES (?, ?, ?, ?)",
-        (make_dancer_id(name), name, None, ""),
+        "INSERT OR REPLACE INTO dancers (id, name, team_id, class_ids, notes) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (make_dancer_id(name), name, None, json.dumps([]), ""),
     )
 
     if team:

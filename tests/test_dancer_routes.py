@@ -132,7 +132,10 @@ class TestDancerDetailPage:
 
         resp = client.get("/dancers/alice-smith")
         assert resp.status_code == 200
-        assert 'href="/dancers/alice-smith/edit" class="btn btn-primary">Edit Dancer' in resp.text
+        assert (
+            'href="/dancers/alice-smith/edit" class="btn btn-primary">Edit Dancer'
+            in resp.text
+        )
 
     def test_detail_page_has_delete_button(self):
         """Test that the detail page has a Delete button with JavaScript handler."""
@@ -298,3 +301,187 @@ class TestDancerListEditDetailFlow:
         resp = client.get("/dancers/alice-smith")
         assert resp.status_code == 200
         assert 'href="/dancers"' in resp.text
+
+
+class TestClassCountOnDancersList:
+    """Tests ensuring the Classes column on the dancers list page shows accurate counts."""
+
+    def _create_class(self, store, name):
+        from dancemanager.models import make_class_id
+
+        class_id = make_class_id(name)
+        store.set(
+            "classes",
+            class_id,
+            {
+                "id": class_id,
+                "name": name,
+                "instructor_id": None,
+                "team_ids": [],
+                "dancer_ids": [],
+            },
+        )
+        return class_id
+
+    def _create_team(self, store, name):
+        from dancemanager.models import make_team_id
+
+        team_id = make_team_id(name)
+        store.set(
+            "teams",
+            team_id,
+            {"id": team_id, "name": name, "dancer_ids": []},
+        )
+        return team_id
+
+    def test_class_count_zero_when_no_classes(self):
+        """Dancer with no classes assigned shows count 0."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        seed_dancers(store)
+        client, _ = make_test_client(store)
+
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        # Both dancers have empty class_ids, so count should be 0
+        assert ">0<" in resp.text or ">0</td>" in resp.text
+
+    def test_class_count_one_single_assignment(self):
+        """Dancer assigned to one class shows correct count."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        client, _ = make_test_client(store)
+
+        # Create a class and assign dancer to it via web form
+        self._create_class(store, "Ballet 101")
+        resp = client.post(
+            "/dancers",
+            data={
+                "name": "Carol White",
+                "class_ids": "test-class-ballet-101",
+                "team_id": "",
+            },
+        )
+        assert resp.status_code == 303
+
+        # Check list page shows count of 1
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        assert "Carol White" in resp.text
+        assert ">1<" in resp.text or ">1</td>" in resp.text
+
+    def test_class_count_multiple_assignments(self):
+        """Dancer assigned to multiple classes shows accurate count."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        client, _ = make_test_client(store)
+
+        class1_id = self._create_class(store, "Ballet 101")
+        class2_id = self._create_class(store, "Jazz 201")
+        class3_id = self._create_class(store, "Tap 302")
+
+        # Assign dancer to all three classes via web form (only last one sticks due to single select)
+        store.set(
+            "dancers",
+            "carol-white",
+            {
+                "id": "carol-white",
+                "name": "Carol White",
+                "class_ids": [class1_id, class2_id, class3_id],
+                "team_id": None,
+            },
+        )
+
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        assert "Carol White" in resp.text
+        assert ">3<" in resp.text or ">3</td>" in resp.text
+
+    def test_class_update_syncs_dancer_class_ids_via_teams(self):
+        """Adding a team to a class updates those dancers' class_ids."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        client, _ = make_test_client(store)
+
+        # Create team with dancer
+        team_id = self._create_team(store, "Red Team")
+        store.set(
+            "dancers",
+            "alice-smith",
+            {
+                "id": "alice-smith",
+                "name": "Alice Smith",
+                "class_ids": [],
+                "team_id": team_id,
+            },
+        )
+
+        # Create class and assign the team to it
+        class_id = self._create_class(store, "Advanced Ballet")
+        resp = client.post(
+            "/classes",
+            data={"name": "Advanced Ballet", "instructor_id": "", "team_ids": team_id},
+        )
+        assert resp.status_code == 303
+
+        # Verify dancer's class_ids was updated
+        alice = store.get("dancers", "alice-smith")
+        assert alice is not None
+        assert class_id in alice.get("class_ids", [])
+
+        # Verify list page shows correct count
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        assert ">1<" in resp.text or ">1</td>" in resp.text
+
+    def test_dancer_update_removes_old_class_reference(self):
+        """Removing a class from dancer updates both sides."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        client, _ = make_test_client(store)
+
+        class_id = self._create_class(store, "Ballet 101")
+        store.set(
+            "dancers",
+            "alice-smith",
+            {
+                "id": "alice-smith",
+                "name": "Alice Smith",
+                "class_ids": [class_id],
+                "team_id": None,
+            },
+        )
+
+        # Update dancer to remove the class
+        resp = client.post(
+            "/dancers/alice-smith",
+            data={"name": "Alice Smith", "class_ids": "", "team_id": ""},
+        )
+        assert resp.status_code == 303
+
+        alice = store.get("dancers", "alice-smith")
+        assert alice is not None
+        assert class_id not in alice.get("class_ids", [])
+
+    def test_cli_style_dancer_has_valid_class_ids(self):
+        """Dancer without class_ids field renders count 0 (not crash)."""
+        tmp_dir = tempfile.mkdtemp()
+        path = os.path.join(tmp_dir, "test_store.json")
+        store = DataStore(path=path)
+        client, _ = make_test_client(store)
+
+        # Simulate CLI-created dancer with no class_ids field at all
+        store.set(
+            "dancers",
+            "bob-jones",
+            {"id": "bob-jones", "name": "Bob Jones", "team_id": None},
+        )
+
+        resp = client.get("/dancers")
+        assert resp.status_code == 200
+        assert "Bob Jones" in resp.text

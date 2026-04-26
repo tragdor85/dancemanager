@@ -166,6 +166,17 @@ async def dancer_create(request: Request, store: DataStore = Depends(store_depen
     }
 
     store.set("dancers", dancer_id, dancer_data)
+
+    # Sync: add this dancer to each class's dancer_ids
+    for cid in class_ids_list:
+        cls = store.get("classes", cid)
+        if cls:
+            dancer_ids = list(cls.get("dancer_ids", []))
+            if dancer_id not in dancer_ids:
+                dancer_ids.append(dancer_id)
+                cls["dancer_ids"] = dancer_ids
+                store.set("classes", cid, cls)
+
     return RedirectResponse(url="/dancers", status_code=303)
 
 
@@ -185,6 +196,18 @@ async def dancer_update(
     if not team_id:
         team_id = None
 
+    # Remove this dancer from old classes' dancer_ids
+    existing_dancer = store.get("dancers", dancer_id)
+    if existing_dancer:
+        for cid in existing_dancer.get("class_ids", []):
+            cls = store.get("classes", cid)
+            if cls:
+                dancer_ids = list(cls.get("dancer_ids", []))
+                if dancer_id in dancer_ids:
+                    dancer_ids.remove(dancer_id)
+                    cls["dancer_ids"] = dancer_ids
+                    store.set("classes", cid, cls)
+
     dancer_data = {
         "id": dancer_id,
         "name": name,
@@ -193,6 +216,17 @@ async def dancer_update(
     }
 
     store.set("dancers", dancer_id, dancer_data)
+
+    # Sync: add this dancer to new classes' dancer_ids
+    for cid in class_ids_list:
+        cls = store.get("classes", cid)
+        if cls:
+            dancer_ids = list(cls.get("dancer_ids", []))
+            if dancer_id not in dancer_ids:
+                dancer_ids.append(dancer_id)
+                cls["dancer_ids"] = dancer_ids
+                store.set("classes", cid, cls)
+
     return RedirectResponse(url="/dancers", status_code=303)
 
 
@@ -433,6 +467,27 @@ async def class_create(request: Request, store: DataStore = Depends(store_depend
     }
 
     store.set("classes", class_id, class_data)
+
+    # Sync: add this class to all dancers in assigned teams
+    for tid in team_ids_list:
+        for did, dancer in store.get_collection("dancers").items():
+            if dancer.get("team_id") == tid:
+                class_ids = list(dancer.get("class_ids", []))
+                if class_id not in class_ids:
+                    class_ids.append(class_id)
+                    dancer["class_ids"] = class_ids
+                    store.set("dancers", did, dancer)
+
+    # Sync: add this class to directly assigned dancers
+    for did in class_data.get("dancer_ids", []):
+        dancer = store.get("dancers", did)
+        if dancer:
+            class_ids = list(dancer.get("class_ids", []))
+            if class_id not in class_ids:
+                class_ids.append(class_id)
+                dancer["class_ids"] = class_ids
+                store.set("dancers", did, dancer)
+
     return RedirectResponse(url="/classes", status_code=303)
 
 
@@ -450,6 +505,20 @@ async def class_update(
 
     team_ids_list = [t.strip() for t in team_ids.split(",") if t.strip()]
 
+    # Remove this class from old teams' dancers' class_ids
+    existing_class = store.get("classes", class_id)
+    if existing_class:
+        old_team_ids = existing_class.get("team_ids", [])
+        for tid in old_team_ids:
+            for did, dancer in store.get_collection("dancers").items():
+                if dancer.get("team_id") == tid and class_id in dancer.get(
+                    "class_ids", []
+                ):
+                    class_ids = list(dancer.get("class_ids", []))
+                    class_ids.remove(class_id)
+                    dancer["class_ids"] = class_ids
+                    store.set("dancers", did, dancer)
+
     class_data = {
         "id": class_id,
         "name": name,
@@ -459,6 +528,27 @@ async def class_update(
     }
 
     store.set("classes", class_id, class_data)
+
+    # Sync: add this class to all dancers in assigned teams
+    for tid in team_ids_list:
+        for did, dancer in store.get_collection("dancers").items():
+            if dancer.get("team_id") == tid:
+                class_ids = list(dancer.get("class_ids", []))
+                if class_id not in class_ids:
+                    class_ids.append(class_id)
+                    dancer["class_ids"] = class_ids
+                    store.set("dancers", did, dancer)
+
+    # Sync: add this class to directly assigned dancers
+    for did in class_data.get("dancer_ids", []):
+        dancer = store.get("dancers", did)
+        if dancer:
+            class_ids = list(dancer.get("class_ids", []))
+            if class_id not in class_ids:
+                class_ids.append(class_id)
+                dancer["class_ids"] = class_ids
+                store.set("dancers", did, dancer)
+
     return RedirectResponse(url="/classes", status_code=303)
 
 
@@ -808,7 +898,10 @@ async def recital_schedule(
     order = recital.get("performance_order", [])
     dance_ids = (
         [s["dance_id"] for s in order]
-        if isinstance(order, list) and len(order) > 0 and isinstance(order[0], dict) and "dance_id" in order[0]
+        if isinstance(order, list)
+        and len(order) > 0
+        and isinstance(order[0], dict)
+        and "dance_id" in order[0]
         else ([s for s in order]) if isinstance(order, list) and len(order) > 0 else []
     )
 
@@ -876,7 +969,10 @@ async def recital_schedule_generate(
     order = recital.get("performance_order", [])
     dance_ids = (
         [s["dance_id"] for s in order]
-        if isinstance(order, list) and len(order) > 0 and isinstance(order[0], dict) and "dance_id" in order[0]
+        if isinstance(order, list)
+        and len(order) > 0
+        and isinstance(order[0], dict)
+        and "dance_id" in order[0]
         else ([s for s in order]) if isinstance(order, list) and len(order) > 0 else []
     )
 
