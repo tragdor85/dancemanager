@@ -46,11 +46,19 @@
         </div>
         <div class="form-group">
           <label for="class_ids">Classes:</label>
-          <input type="text" id="class_ids" name="class_ids" value="{{ instructor.class_ids }}">
+          <select id="class_ids" name="class_ids" multiple>
+            {% for cls in classes %}
+            <option value="{{ cls.id }}" {% if instructor and cls.id in (instructor.class_ids if instructor.class_ids else []) %}selected{% endif %}>{{ cls.name }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="form-group">
           <label for="dance_ids">Dances:</label>
-          <input type="text" id="dance_ids" name="dance_ids" value="{{ instructor.dance_ids }}">
+          <select id="dance_ids" name="dance_ids" multiple>
+            {% for dance in dances %}
+            <option value="{{ dance.id }}" {% if instructor and dance.id in (instructor.dance_ids if instructor.dance_ids else []) %}selected{% endif %}>{{ dance.name }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="btn-group">
           <a href="/instructors" class="btn btn-secondary">Cancel</a>

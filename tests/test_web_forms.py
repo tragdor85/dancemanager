@@ -1076,6 +1076,181 @@ class TestInstructorForm:
         assert "form" in response.text.lower()
 
 
+class TestInstructorFormMultiSelect:
+    """Tests for instructor form multi-select dropdowns."""
+
+    def _setup_store(self):
+        tmp_dir = tempfile.mkdtemp()
+        store = DataStore(path=os.path.join(tmp_dir, "store.json"))
+        store.set(
+            "classes",
+            "c1",
+            {
+                "id": "c1",
+                "name": "Ballet Class",
+                "instructor_id": None,
+                "team_ids": [],
+                "dancer_ids": [],
+            },
+        )
+        store.set(
+            "classes",
+            "c2",
+            {
+                "id": "c2",
+                "name": "Jazz Class",
+                "instructor_id": None,
+                "team_ids": [],
+                "dancer_ids": [],
+            },
+        )
+        store.set(
+            "dances",
+            "dance1",
+            {
+                "id": "dance1",
+                "name": "Dance One",
+                "song_name": "Song A",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
+        store.set(
+            "dances",
+            "dance2",
+            {
+                "id": "dance2",
+                "name": "Dance Two",
+                "song_name": "Song B",
+                "instructor_id": None,
+                "dancer_ids": [],
+                "notes": "",
+            },
+        )
+        return store
+
+    def test_instructor_new_form_uses_multi_selects(self):
+        """New instructor form uses select dropdowns for classes and dances."""
+        store = self._setup_store()
+        app = create_app_with_store(store)
+        client = TestClient(app)
+        response = client.get("/instructors/new")
+        assert response.status_code == 200
+        assert '<select id="class_ids" name="class_ids" multiple>' in response.text
+        assert '<select id="dance_ids" name="dance_ids" multiple>' in response.text
+        assert 'value="c1"' in response.text
+        assert 'value="dance1"' in response.text
+
+    def test_instructor_edit_form_preselects_classes(self):
+        """Edit form pre-selects the classes assigned to the instructor."""
+        store = self._setup_store()
+        store.set(
+            "instructors",
+            "i1",
+            {
+                "id": "i1",
+                "name": "Jane Instructor",
+                "class_ids": ["c1"],
+                "dance_ids": [],
+            },
+        )
+        app = create_app_with_store(store)
+        client = TestClient(app)
+        response = client.get("/instructors/i1/edit")
+        assert response.status_code == 200
+        assert '<select id="class_ids" name="class_ids" multiple>' in response.text
+        assert "selected" in response.text
+        assert 'value="c1"' in response.text
+
+    def test_instructor_edit_form_preselects_dances(self):
+        """Edit form pre-selects the dances assigned to the instructor."""
+        store = self._setup_store()
+        store.set(
+            "instructors",
+            "i1",
+            {
+                "id": "i1",
+                "name": "Jane Instructor",
+                "class_ids": [],
+                "dance_ids": ["dance2"],
+            },
+        )
+        app = create_app_with_store(store)
+        client = TestClient(app)
+        response = client.get("/instructors/i1/edit")
+        assert response.status_code == 200
+        assert '<select id="dance_ids" name="dance_ids" multiple>' in response.text
+        assert "selected" in response.text
+        assert 'value="dance2"' in response.text
+
+    def test_instructor_create_with_multi_select(self):
+        """Creating an instructor with multi-select saves selections correctly."""
+        store = self._setup_store()
+        app = create_app_with_store(store)
+        client = TestClient(app, follow_redirects=False)
+        resp = client.post(
+            "/instructors",
+            data={
+                "name": "New Instructor",
+                "class_ids": ["c1", "c2"],
+                "dance_ids": ["dance1"],
+            },
+        )
+        assert resp.status_code == 303
+        new_instructor = store.get("instructors", "new-instructor")
+        assert new_instructor is not None
+        assert set(new_instructor["class_ids"]) == {"c1", "c2"}
+        assert set(new_instructor["dance_ids"]) == {"dance1"}
+
+    def test_instructor_update_with_multi_select(self):
+        """Updating an instructor with multi-select replaces selections."""
+        store = self._setup_store()
+        store.set(
+            "instructors",
+            "i1",
+            {
+                "id": "i1",
+                "name": "Jane Instructor",
+                "class_ids": ["c1"],
+                "dance_ids": [],
+            },
+        )
+        app = create_app_with_store(store)
+        client = TestClient(app, follow_redirects=False)
+        resp = client.post(
+            "/instructors/i1",
+            data={
+                "name": "Jane Instructor",
+                "class_ids": ["c2"],
+                "dance_ids": ["dance1", "dance2"],
+            },
+        )
+        assert resp.status_code == 303
+        updated = store.get("instructors", "i1")
+        assert set(updated["class_ids"]) == {"c2"}
+        assert set(updated["dance_ids"]) == {"dance1", "dance2"}
+
+    def test_instructor_create_with_no_selections(self):
+        """Creating an instructor with no classes or dances saves empty lists."""
+        store = self._setup_store()
+        app = create_app_with_store(store)
+        client = TestClient(app, follow_redirects=False)
+        resp = client.post(
+            "/instructors",
+            data={
+                "name": "Solo Instructor",
+                "class_ids": [],
+                "dance_ids": [],
+            },
+        )
+        assert resp.status_code == 303
+        new_instructor = store.get("instructors", "solo-instructor")
+        assert new_instructor is not None
+        assert new_instructor["class_ids"] == []
+        assert new_instructor["dance_ids"] == []
+
+
 class TestDanceForm:
     """Tests for the dance form."""
 

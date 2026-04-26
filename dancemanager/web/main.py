@@ -685,14 +685,11 @@ async def instructor_create(
 ):
     form = await request.form()
     name = form.get("name")
-    class_ids = form.get("class_ids", "")
-    dance_ids = form.get("dance_ids", "")
+    class_ids_list = form.getlist("class_ids")
+    dance_ids_list = form.getlist("dance_ids")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    class_ids_list = [c.strip() for c in class_ids.split(",") if c.strip()]
-    dance_ids_list = [d.strip() for d in dance_ids.split(",") if d.strip()]
 
     instructor_id = make_instructor_id(name)
     instructor_data = {
@@ -712,14 +709,11 @@ async def instructor_update(
 ):
     form = await request.form()
     name = form.get("name")
-    class_ids = form.get("class_ids", "")
-    dance_ids = form.get("dance_ids", "")
+    class_ids_list = form.getlist("class_ids")
+    dance_ids_list = form.getlist("dance_ids")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    class_ids_list = [c.strip() for c in class_ids.split(",") if c.strip()]
-    dance_ids_list = [d.strip() for d in dance_ids.split(",") if d.strip()]
 
     instructor_data = {
         "id": instructor_id,
