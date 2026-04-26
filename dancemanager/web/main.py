@@ -34,6 +34,7 @@ def store_dependency():
 
 _templates_dir = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(_templates_dir))
+templates.env.globals["isinstance"] = isinstance
 
 
 # ── Dashboard ──────────────────────────────────────────────────────────
