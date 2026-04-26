@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>{{ page }} - Dance Manager</title>
+          <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+              .container { max-width: 1200px; margin: 0 auto; }
+              nav { background: #333; color: white; padding: 15px; margin-bottom: 20px; }
+              nav a { color: white; text-decoration: none; margin-right: 20px; }
+              nav a:hover { text-decoration: underline; }
+              h1 { color: #333; margin-bottom: 20px; }
+              .class-info { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+              .class-info h2 { margin-bottom: 20px; color: #333; }
+              .class-info p { margin-bottom: 10px; color: #666; }
+              .actions { margin-bottom: 30px; }
+              .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px; }
+              .btn-primary { background: #007bff; color: white; }
+              .btn-primary:hover { background: #0056b3; }
+              .btn-success { background: #28a745; color: white; }
+              .btn-success:hover { background: #1e7e34; }
+              .btn-danger { background: #dc3545; color: white; }
+              .btn-danger:hover { background: #c82333; }
+          </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Home</a>
+            <a href="/dancers">Dancers</a>
+            <a href="/teams">Teams</a>
+            <a href="/classes">Classes</a>
+            <a href="/instructors">Instructors</a>
+            <a href="/dances">Dances</a>
+            <a href="/recitals">Recitals</a>
+        </nav>
+        <h1>Class Detail</h1>
+          <div class="class-info">
+              <h2>{{ class.name }}</h2>
+              <p><strong>ID:</strong> {{ class.id }}</p>
+              <p><strong>Instructor:</strong> {{ class.instructor_id }}</p>
+          </div>
+          {% if dancers %}
+          <div class="class-info">
+              <h2>Dancers</h2>
+              <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                  <thead>
+                      <tr style="border-bottom: 2px solid #ddd;">
+                          <th style="text-align:left; padding: 10px;">Name</th>
+                          <th style="text-align:left; padding: 10px;">ID</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for dancer in dancers %}
+                      <tr style="border-bottom: 1px solid #eee;">
+                          <td style="padding: 10px;"><a href="/dancers/{{ dancer.id }}" style="color: #007bff;">{{ dancer.name }}</a></td>
+                          <td style="padding: 10px; color: #666;">{{ dancer.id }}</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+          </div>
+          {% else %}
+          <div class="class-info">
+              <p style="color: #666;">No dancers enrolled in this class.</p>
+          </div>
+          {% endif %}
+        <div class="actions">
+            <a href="/classes/{{ class.id }}/edit" class="btn btn-primary">Edit Class</a>
+            <a href="/classes" class="btn btn-secondary">Back to List</a>
+            <a href="#" onclick="return confirmDelete()" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+</body>
+</html>

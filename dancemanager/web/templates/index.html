@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        nav { background: #333; color: white; padding: 15px; margin-bottom: 20px; }
+        nav a { color: white; text-decoration: none; margin-right: 20px; }
+        nav a:hover { text-decoration: underline; }
+        h1 { color: #333; margin-bottom: 20px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        .stat-card h3 { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .stat-card .count { color: #333; font-size: 32px; font-weight: bold; }
+        .quick-links { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .quick-links h2 { margin-bottom: 15px; color: #333; }
+        .quick-links ul { list-style: none; padding: 0; }
+        .quick-links li { padding: 8px 0; }
+        .quick-links a { color: #007bff; text-decoration: none; }
+        .quick-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">Home</a>
+            <a href="/dancers">Dancers</a>
+            <a href="/teams">Teams</a>
+            <a href="/classes">Classes</a>
+            <a href="/instructors">Instructors</a>
+            <a href="/dances">Dances</a>
+            <a href="/recitals">Recitals</a>
+        </nav>
+        <h1>Dance Manager Dashboard</h1>
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Dancers</h3>
+                <div class="count">{{ dancer_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Teams</h3>
+                <div class="count">{{ team_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Classes</h3>
+                <div class="count">{{ class_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Instructors</h3>
+                <div class="count">{{ instructor_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Dances</h3>
+                <div class="count">{{ dance_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Recitals</h3>
+                <div class="count">{{ recital_count }}</div>
+            </div>
+        </div>
+        <div class="quick-links">
+            <h2>Quick Links</h2>
+            <ul>
+                <li><a href="/dancers/new">Add New Dancer</a></li>
+                <li><a href="/teams/new">Create Team</a></li>
+                <li><a href="/classes/new">Schedule Class</a></li>
+                <li><a href="/instructors/new">Add Instructor</a></li>
+                <li><a href="/dances/new">Register Dance</a></li>
+                <li><a href="/recitals/new">Plan Recital</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

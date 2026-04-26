@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>{{ page }} - Dance Manager</title>
+         <style>
+             * { margin: 0; padding: 0; box-sizing: border-box; }
+             body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+            .container { max-width: 1200px; margin: 0 auto; }
+             nav { background: #333; color: white; padding: 15px; margin-bottom: 20px; }
+             nav a { color: white; text-decoration: none; margin-right: 20px; }
+             nav a:hover { text-decoration: underline; }
+             h1 { color: #333; margin-bottom: 20px; }
+            .actions { margin-bottom: 20px; }
+             .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px; }
+            .btn-primary { background: #007bff; color: white; }
+            .btn-primary:hover { background: #0056b3; }
+            table { width: 100%; background: white; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+             th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+             th { background: #f8f8f8; font-weight: 600; }
+             tr:hover { background: #f8f8f8; }
+             a { color: #007bff; text-decoration: none; }
+             a:hover { text-decoration: underline; }
+         </style>
+</head>
+<body>
+     <div class="container">
+         <nav>
+             <a href="/">Home</a>
+             <a href="/dancers">Dancers</a>
+             <a href="/teams">Teams</a>
+             <a href="/classes">Classes</a>
+             <a href="/instructors">Instructors</a>
+             <a href="/dances">Dances</a>
+             <a href="/recitals">Recitals</a>
+         </nav>
+         <h1>Classes</h1>
+         <div class="actions">
+             <a href="/classes/new" class="btn btn-primary">Add New Class</a>
+         </div>
+         {% if classes %}
+         <table>
+             <thead>
+                 <tr>
+                     <th>Name</th>
+                     <th>Instructor</th>
+                     <th>Teams</th>
+                     <th>Actions</th>
+                 </tr>
+             </thead>
+             <tbody>
+                 {% for class_obj in classes %}
+                 <tr>
+                     <td><a href="/classes/{{ class_obj.id }}">{{ class_obj.name }}</a></td>
+                     <td>{{ class_obj.instructor_id or '-' }}</td>
+                     <td>{{ class_obj.team_ids|length }}</td>
+                     <td>
+                         <a href="/classes/{{ class_obj.id }}">Detail</a> |
+                         <a href="/classes/{{ class_obj.id }}/edit">Edit</a>
+                     </td>
+                 </tr>
+                 {% endfor %}
+             </tbody>
+         </table>
+         {% else %}
+         <div style="text-align: center; color: #666; padding: 40px;">No classes found. Create your first class!</div>
+         {% endif %}
+     </div>
+</body>
+</html>
