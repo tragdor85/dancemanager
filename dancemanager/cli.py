@@ -30,6 +30,17 @@ cli.add_command(recital)
 
 
 @cli.command()
+def migrate():
+    """Run all pending database migrations."""
+    from dancemanager.migrate import run_migrations
+    from dancemanager.store import get_store
+
+    store = get_store()
+    run_migrations(store._conn)
+    click.echo("Migrations complete.")
+
+
+@cli.command()
 @click.option(
     "--host", default="localhost", help="Host to bind to (default: localhost)"
 )

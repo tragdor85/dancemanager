@@ -59,6 +59,7 @@ class DataStore:
         self._create_tables()
         self._create_indexes()
         self._migrate()
+        self._run_migrations()
 
     def close(self):
         """Close the database connection."""
@@ -109,8 +110,16 @@ class DataStore:
 
         # Known schema fields that map directly to table columns
         known_fields = {
-            "id", "name", "song_name", "instructor_id", "team_id",
-            "dancer_ids", "class_ids", "team_ids", "performance_order", "notes"
+            "id",
+            "name",
+            "song_name",
+            "instructor_id",
+            "team_id",
+            "dancer_ids",
+            "class_ids",
+            "team_ids",
+            "performance_order",
+            "notes",
         }
 
         # Always use key as id if not explicitly provided in value
@@ -588,7 +597,11 @@ class DataStore:
                     for instructor in get_items("instructors"):
                         self._conn.execute(
                             "INSERT OR REPLACE INTO instructors (id, name, notes) VALUES (?, ?, ?)",
-                            (instructor["id"], instructor["name"], instructor.get("notes", "")),
+                            (
+                                instructor["id"],
+                                instructor["name"],
+                                instructor.get("notes", ""),
+                            ),
                         )
 
                     # Migrate teams
@@ -602,21 +615,37 @@ class DataStore:
                     for dancer in get_items("dancers"):
                         self._conn.execute(
                             "INSERT OR REPLACE INTO dancers (id, name, team_id, notes) VALUES (?, ?, ?, ?)",
-                            (dancer["id"], dancer["name"], dancer.get("team_id"), dancer.get("notes", "")),
+                            (
+                                dancer["id"],
+                                dancer["name"],
+                                dancer.get("team_id"),
+                                dancer.get("notes", ""),
+                            ),
                         )
 
                     # Migrate classes
                     for cls in get_items("classes"):
                         self._conn.execute(
                             "INSERT OR REPLACE INTO classes (id, name, instructor_id, notes) VALUES (?, ?, ?, ?)",
-                            (cls["id"], cls["name"], cls.get("instructor_id"), cls.get("notes", "")),
+                            (
+                                cls["id"],
+                                cls["name"],
+                                cls.get("instructor_id"),
+                                cls.get("notes", ""),
+                            ),
                         )
 
                     # Migrate dances
                     for dance in get_items("dances"):
                         self._conn.execute(
                             "INSERT OR REPLACE INTO dances (id, name, song_name, instructor_id, notes) VALUES (?, ?, ?, ?, ?)",
-                            (dance["id"], dance["name"], dance["song_name"], dance.get("instructor_id"), dance.get("notes", "")),
+                            (
+                                dance["id"],
+                                dance["name"],
+                                dance["song_name"],
+                                dance.get("instructor_id"),
+                                dance.get("notes", ""),
+                            ),
                         )
 
                     # Migrate recitals
@@ -660,6 +689,44 @@ class DataStore:
                     self._conn.commit()
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     pass  # JSON file is corrupted or not valid, skip migration
+
+    def _run_migrations(self):
+        """Run all pending numbered migrations from the migrations directory."""
+        import importlib.util as _importlib_util
+
+        migrations_dir = Path(__file__).parent / "migrations"
+        if not migrations_dir.exists():
+            return
+
+        migration_files = sorted(
+            f for f in migrations_dir.glob("*.py") if f.name != "__init__.py"
+        )
+
+        cursor = self._conn.cursor()
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS _migrations (
+                name TEXT PRIMARY KEY,
+                applied_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+
+        for migration_file in migration_files:
+            module_name = migration_file.stem
+
+            cursor.execute(
+                "SELECT COUNT(*) FROM _migrations WHERE name = ?", (module_name,)
+            )
+            if cursor.fetchone()[0] > 0:
+                continue
+
+            spec = _importlib_util.spec_from_file_location(module_name, migration_file)
+            module = _importlib_util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            module.migrate_up(self._conn)
+
+            cursor.execute("INSERT INTO _migrations (name) VALUES (?)", (module_name,))
+            self._conn.commit()
 
     def _query(self, sql: str, params: tuple = ()) -> List[Dict]:
         """Execute a query and return results as list of dicts."""
