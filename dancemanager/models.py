@@ -47,3 +47,8 @@ def make_dance_id(name: str) -> str:
 def make_recital_id(name: str) -> str:
     """Return a deterministic, human-friendly ID for a recital."""
     return name.strip().lower().replace(" ", "-")
+
+
+def make_studio_id(name: str) -> str:
+    """Return a deterministic, human-friendly ID for a studio."""
+    return f"studio-{name.strip().lower().replace(' ', '-')}"

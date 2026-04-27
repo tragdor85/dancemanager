@@ -3,12 +3,10 @@
 Provides commands to add, list, show, remove, and manage classes.
 """
 
-from typing import Optional
-
 import click
 
 from dancemanager.models import make_class_id
-from dancemanager.utils import get_store
+from dancemanager.utils import get_store, render_table
 
 
 @click.group()
@@ -24,8 +22,13 @@ def classes():
     default=None,
     help="Lead instructor by name.",
 )
+@click.option(
+    "--studio",
+    default=None,
+    help="Studio ID to assign the class to.",
+)
 @click.pass_context
-def add(ctx, name, instructor):
+def add(ctx, name, instructor, studio):
     """Create a dance class."""
     store = get_store()
     classes_list = store.get_collection("classes")
@@ -62,6 +65,13 @@ def add(ctx, name, instructor):
                 f"Warning: instructor '{instructor}' not found. "
                 "Assign later with 'instructor assign-class'."
             )
+
+    if studio:
+        store.execute(
+            "UPDATE classes SET extra = json_set("
+            "COALESCE(extra, '{}'), '$.studio_id', ?) WHERE id = ?",
+            (studio, class_id),
+        )
 
     store.save()
     click.echo(f"Created class: {name} (ID: {class_id})")
@@ -112,6 +122,15 @@ def show(ctx, class_id):
 
     click.echo(f"Name: {cls['name']}")
     click.echo(f"Instructor ID: {cls.get('instructor_id', '') or 'None'}")
+    studio_id = cls.get("studio_id", "")
+    if studio_id:
+        studio = store.get("studios", studio_id)
+        if studio:
+            click.echo(f"Studio: {studio['name']} ({studio_id})")
+        else:
+            click.echo(f"Studio ID: {studio_id}")
+    else:
+        click.echo("Studio: None")
     click.echo(f"Notes: {cls.get('notes', '')}")
 
 
@@ -264,6 +283,59 @@ def instructor_assign(ctx, class_id, instructor_id):
 
     store.save()
     click.echo(f"Assigned instructor '{instructor['name']}' to class '{cls['name']}'.")
+
+
+@classes.command()
+@click.argument("class_id")
+@click.argument("studio_id")
+@click.pass_context
+def studio_assign(ctx, class_id, studio_id):
+    """Assign a studio to a class."""
+    store = get_store()
+    cls = store.get("classes", class_id)
+    if cls is None:
+        click.echo(f"Class not found: {class_id}")
+        return
+
+    studio = store.get("studios", studio_id)
+    if not studio:
+        for sid, s in store.iterate("studios"):
+            if s["name"].lower() == studio_id.lower():
+                studio = s
+                studio_id = sid
+                break
+
+    if not studio:
+        click.echo(f"Studio not found: {studio_id}")
+        return
+
+    store.execute(
+        "UPDATE classes SET extra = json_set("
+        "COALESCE(extra, '{}'), '$.studio_id', ?) WHERE id = ?",
+        (studio_id, class_id),
+    )
+    store.save()
+    click.echo(f"Assigned studio '{studio['name']}' to class '{cls['name']}'.")
+
+
+@classes.command()
+@click.argument("class_id")
+@click.pass_context
+def studio_remove(ctx, class_id):
+    """Remove the studio assignment from a class."""
+    store = get_store()
+    cls = store.get("classes", class_id)
+    if cls is None:
+        click.echo(f"Class not found: {class_id}")
+        return
+
+    store.execute(
+        "UPDATE classes SET extra = json_remove("
+        "COALESCE(extra, '{}'), '$.studio_id') WHERE id = ?",
+        (class_id,),
+    )
+    store.save()
+    click.echo(f"Removed studio assignment from class '{cls['name']}'.")
 
 
 @classes.command()

@@ -7,8 +7,8 @@ from dancemanager.dances import dances
 from dancemanager.dancers import dancers
 from dancemanager.instructors import instructors
 from dancemanager.recital import recital
+from dancemanager.studios import studio
 from dancemanager.teams import teams
-from dancemanager.utils import get_store, render_table
 
 
 @click.group()
@@ -27,6 +27,7 @@ cli.add_command(dancers)
 cli.add_command(instructors)
 cli.add_command(dances)
 cli.add_command(recital)
+cli.add_command(studio)
 
 
 @cli.command()
@@ -41,9 +42,7 @@ def migrate():
 
 
 @cli.command()
-@click.option(
-    "--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)"
-)
+@click.option("--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)")
 @click.option(
     "--port", default=8000, type=int, help="Port to listen on (default: 8000)"
 )

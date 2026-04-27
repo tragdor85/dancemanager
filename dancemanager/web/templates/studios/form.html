@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page }} - Dance Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container { max-width: 800px; margin: 0 auto; }
+    .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ page }} Form</h1>
+<div class="form-container">
+    <form method="POST" action="{% if studio %}/studios/{{ studio.id }}{% else %}/studios{% endif %}">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ studio.name if studio else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location" value="{{ studio.location if studio else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="capacity">Capacity:</label>
+            <input type="number" id="capacity" name="capacity" value="{{ studio.capacity if studio else 20 }}" min="1">
+        </div>
+        <div class="form-group">
+            <label for="equipment">Equipment (comma-separated):</label>
+            <textarea id="equipment" name="equipment" placeholder="mirrors, barre, sound system">{{ studio.equipment | join(', ') if studio and studio.equipment else '' }}</textarea>
+        </div>
+        <div class="btn-group">
+            <a href="/studios" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if studio %}Update{% else %}Create{% endif %} Studio</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

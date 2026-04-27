@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page }} - Dance Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .actions { margin-bottom: 20px; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    table { width: 100%; background: white; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f8f8; font-weight: 600; }
+    tr:hover { background: #f8f8f8; }
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .search-form { margin-bottom: 20px; }
+    .search-form input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 300px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Studios</h1>
+<div class="actions">
+    <a href="/studios/new" class="btn btn-primary">Add New Studio</a>
+</div>
+<form method="GET" class="search-form">
+    <input type="text" name="q" value="{{ query or '' }}" placeholder="Search studios...">
+</form>
+{% if studios %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Capacity</th>
+            <th>Reservations</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for studio in studios %}
+        <tr>
+            <td><a href="/studios/{{ studio.id }}">{{ studio.name }}</a></td>
+            <td>{{ studio.location or '' }}</td>
+            <td>{{ studio.capacity }}</td>
+            <td>{{ studio.reservation_count }}</td>
+            <td>
+                <a href="/studios/{{ studio.id }}">Detail</a> |
+                <a href="/studios/{{ studio.id }}/edit">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="text-align: center; color: #666; padding: 40px;">No studios found. Create your first studio!</div>
+{% endif %}
+{% endblock %}

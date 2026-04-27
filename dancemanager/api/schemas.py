@@ -7,6 +7,7 @@ __all__ = [
     "make_instructor_id",
     "make_dance_id",
     "make_recital_id",
+    "make_studio_id",
 ]
 
 from pydantic import BaseModel, Field
@@ -18,6 +19,7 @@ from dancemanager.models import (  # noqa: F401
     make_instructor_id,
     make_dance_id,
     make_recital_id,
+    make_studio_id,
 )
 
 
@@ -170,4 +172,32 @@ class ScheduleSlot(BaseModel):
     dance_id: str
     song_name: str
     dancers: List[str] = []
+    notes: str = ""
+
+
+# Studio schemas
+class StudioCreate(BaseModel):
+    name: str = Field(..., min_length=1, description="Studio name")
+    location: Optional[str] = None
+    capacity: int = Field(default=20, ge=1, description="Maximum dancer capacity")
+    equipment: List[str] = Field(default=[], description="List of equipment items")
+
+
+class StudioUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, description="Studio name")
+    location: Optional[str] = Field(default=None, description="Location/address")
+    capacity: Optional[int] = Field(
+        default=None, ge=1, description="Maximum dancer capacity"
+    )
+    equipment: Optional[List[str]] = Field(
+        default=None, description="List of equipment items"
+    )
+
+
+class StudioResponse(BaseModel):
+    id: str
+    name: str
+    location: Optional[str] = None
+    capacity: int = 20
+    schedule: List[dict] = []
     notes: str = ""

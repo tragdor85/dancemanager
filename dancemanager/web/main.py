@@ -16,8 +16,15 @@ from dancemanager.models import (
     make_instructor_id,
     make_dance_id,
     make_recital_id,
+    make_studio_id,
 )
 from dancemanager.recital import greedy_schedule
+from dancemanager.studios import (
+    get_studio_schedule,
+    reserve_slot as _reserve_slot,
+    cancel_reservation as _cancel_reservation,
+    title,
+)
 
 app = FastAPI()
 router = APIRouter()
@@ -54,6 +61,7 @@ async def index(request: Request, store: DataStore = Depends(store_dependency)):
             "instructor_count": len(store.get_collection("instructors")),
             "dance_count": len(store.get_collection("dances")),
             "recital_count": len(store.get_collection("recitals")),
+            "studio_count": len(store.get_collection("studios")),
         },
     )
 
@@ -1205,6 +1213,289 @@ async def recital_delete(
 ):
     store.delete("recitals", recital_id)
     return RedirectResponse(url="/recitals", status_code=303)
+
+
+# ── Studios ─────────────────────────────────────────────────────────────
+
+
+@router.get("/studios")
+async def studios_list(
+    request: Request, q: str = None, store: DataStore = Depends(store_dependency)
+):
+    studios_coll = store.get_collection("studios")
+    studios = [{"id": sid, **s} for sid, s in studios_coll.items()]
+
+    # Extract equipment from extra column and count reservations
+    import json as _json
+
+    for studio in studios:
+        extra = studio.get("extra") or {}
+        if isinstance(extra, str):
+            try:
+                extra = _json.loads(extra)
+            except (json.JSONDecodeError, TypeError):
+                extra = {}
+        studio["equipment"] = extra.get("equipment", [])
+
+        schedule = studio.get("schedule", [])
+        if not isinstance(schedule, list):
+            try:
+                schedule = _json.loads(schedule)
+            except (json.JSONDecodeError, TypeError):
+                schedule = []
+        studio["reservation_count"] = len(schedule)
+
+    # Filter by search query
+    if q:
+        studios = [s for s in studios if q.lower() in s.get("name", "").lower()]
+
+    return templates.TemplateResponse(
+        request,
+        "studios/list.html",
+        {"request": request, "page": "studios", "studios": studios, "query": q},
+    )
+
+
+@router.get("/studios/new")
+async def studio_new(request: Request, store: DataStore = Depends(store_dependency)):
+    classes = list(store.get_collection("classes").values())
+    return templates.TemplateResponse(
+        request,
+        "studios/form.html",
+        {"request": request, "page": "studios", "classes": classes, "studio": None},
+    )
+
+
+@router.get("/studios/{studio_id}")
+async def studio_detail(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    studio = store.get("studios", studio_id)
+    if not studio:
+        return HTMLResponse("Studio not found", status_code=404)
+
+    import json as _json
+
+    # Extract equipment from extra column
+    extra = studio.get("extra") or {}
+    if isinstance(extra, str):
+        try:
+            extra = _json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra = {}
+    studio["equipment"] = extra.get("equipment", [])
+
+    # Get schedule with resolved names
+    schedule = get_studio_schedule(studio_id)
+    classes_coll = store.get_collection("classes")
+    dancers_coll = store.get_collection("dancers")
+    instructors_coll = store.get_collection("instructors")
+
+    for slot in schedule:
+        reserved_by = slot.get("reserved_by", "")
+        res_type = slot.get("reservation_type", "")
+        if reserved_by and res_type == "class":
+            cls = classes_coll.get(reserved_by)
+            if cls:
+                slot["resolved_name"] = cls.get("name", reserved_by)
+        elif reserved_by and res_type == "individual":
+            dancer = dancers_coll.get(reserved_by)
+            if dancer:
+                slot["resolved_name"] = dancer.get("name", reserved_by)
+            else:
+                instructor = instructors_coll.get(reserved_by)
+                if instructor:
+                    slot["resolved_name"] = instructor.get("name", reserved_by)
+                else:
+                    slot["resolved_name"] = reserved_by
+        else:
+            slot["resolved_name"] = reserved_by or "Unknown"
+
+    return templates.TemplateResponse(
+        request,
+        "studios/detail.html",
+        {
+            "request": request,
+            "page": "studios",
+            "studio": studio,
+            "schedule": schedule,
+        },
+    )
+
+
+@router.get("/studios/{studio_id}/edit")
+async def studio_edit(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    studio = store.get("studios", studio_id)
+    if not studio:
+        return HTMLResponse("Studio not found", status_code=404)
+
+    classes = list(store.get_collection("classes").values())
+    return templates.TemplateResponse(
+        request,
+        "studios/form.html",
+        {
+            "request": request,
+            "page": "studios",
+            "classes": classes,
+            "studio": studio,
+        },
+    )
+
+
+@router.post("/studios")
+async def studio_create(request: Request, store: DataStore = Depends(store_dependency)):
+    form = await request.form()
+    name = form.get("name")
+    location = form.get("location", "") or ""
+    capacity_str = form.get("capacity", "20")
+
+    try:
+        capacity = int(capacity_str) if capacity_str else 20
+    except (ValueError, TypeError):
+        capacity = 20
+
+    equipment_str = form.get("equipment", "")
+    equipment = (
+        [e.strip() for e in equipment_str.split(",") if e.strip()]
+        if equipment_str
+        else []
+    )
+
+    if not name:
+        return HTMLResponse("Name is required", status_code=400)
+
+    studio_id = make_studio_id(name)
+    extra_fields = {}
+    if equipment:
+        extra_fields["equipment"] = equipment
+
+    store.execute(
+        "INSERT OR REPLACE INTO studios "
+        "(id, name, location, capacity, schedule, notes) VALUES (?, ?, ?, ?, ?, ?)",
+        (studio_id, title(name), location, capacity, "[]", ""),
+    )
+
+    if extra_fields:
+        import json as _json
+
+        store.execute(
+            "UPDATE studios SET extra = ? WHERE id = ?",
+            (_json.dumps(extra_fields), studio_id),
+        )
+
+    store.save()
+    return RedirectResponse(url="/studios", status_code=303)
+
+
+@router.post("/studios/{studio_id}")
+async def studio_update(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    form = await request.form()
+    name = form.get("name")
+    location = form.get("location", "") or ""
+    capacity_str = form.get("capacity", "20")
+
+    try:
+        capacity = int(capacity_str) if capacity_str else 20
+    except (ValueError, TypeError):
+        capacity = 20
+
+    equipment_str = form.get("equipment", "")
+    equipment = (
+        [e.strip() for e in equipment_str.split(",") if e.strip()]
+        if equipment_str
+        else []
+    )
+
+    if not name:
+        return HTMLResponse("Name is required", status_code=400)
+
+    studio_data = {
+        "id": studio_id,
+        "name": title(name),
+        "location": location,
+        "capacity": capacity,
+    }
+
+    store.set("studios", studio_id, studio_data)
+
+    # Update equipment in extra column
+    import json as _json
+
+    extra = studio_data.get("extra") or {}
+    if isinstance(extra, str):
+        try:
+            extra = _json.loads(extra)
+        except (json.JSONDecodeError, TypeError):
+            extra = {}
+    extra["equipment"] = equipment
+    store.execute(
+        "UPDATE studios SET extra = ? WHERE id = ?",
+        (_json.dumps(extra), studio_id),
+    )
+
+    return RedirectResponse(url="/studios", status_code=303)
+
+
+@router.delete("/studios/{studio_id}")
+async def studio_delete(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    store.delete("studios", studio_id)
+    return RedirectResponse(url="/studios", status_code=303)
+
+
+@router.post("/studios/{studio_id}/reserve")
+async def studio_reserve(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    form = await request.form()
+    date = form.get("date", "")
+    start_time = form.get("start_time", "")
+    end_time = form.get("end_time", "")
+    reservation_type = form.get("reservation_type", "individual")
+    reservation_id = form.get("reservation_id", "")
+
+    if not all([date, start_time, end_time]):
+        return RedirectResponse(url=f"/studios/{studio_id}", status_code=303)
+
+    success = _reserve_slot(
+        studio_id=studio_id,
+        date=date,
+        start_time=start_time,
+        end_time=end_time,
+        reservation_type=reservation_type,
+        reservation_id=reservation_id,
+    )
+
+    if not success:
+        return RedirectResponse(url=f"/studios/{studio_id}", status_code=303)
+
+    return RedirectResponse(url=f"/studios/{studio_id}", status_code=303)
+
+
+@router.post("/studios/{studio_id}/cancel")
+async def studio_cancel_reservation(
+    request: Request, studio_id: str, store: DataStore = Depends(store_dependency)
+):
+    form = await request.form()
+    date = form.get("date", "")
+    start_time = form.get("start_time", "")
+    end_time = form.get("end_time", "")
+    reservation_id = form.get("reservation_id", "")
+
+    _cancel_reservation(
+        studio_id=studio_id,
+        date=date,
+        start_time=start_time,
+        end_time=end_time,
+        reservation_id=reservation_id,
+    )
+
+    return RedirectResponse(url=f"/studios/{studio_id}", status_code=303)
 
 
 app.include_router(router)

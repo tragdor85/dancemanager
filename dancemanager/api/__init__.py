@@ -19,6 +19,7 @@ from dancemanager.api.routes import (
     dances_router as dances,
     recitals_router as recitals,
     import_export_router as import_export,
+    studios_router as studios,
 )
 
 # Path to static files (created if missing)
@@ -53,5 +54,6 @@ def create_app():
     app.include_router(dances)
     app.include_router(recitals)
     app.include_router(import_export)
+    app.include_router(studios)
 
     return app

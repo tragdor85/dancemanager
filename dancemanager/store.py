@@ -83,7 +83,13 @@ class DataStore:
                 except (json.JSONDecodeError, TypeError):
                     pass
             # Deserialize JSON list fields back to Python lists
-            for field in ("dancer_ids", "class_ids", "team_ids", "performance_order"):
+            for field in (
+                "dancer_ids",
+                "class_ids",
+                "team_ids",
+                "performance_order",
+                "schedule",
+            ):
                 val = row.get(field)
                 if isinstance(val, str):
                     try:
@@ -227,7 +233,13 @@ class DataStore:
                 except (json.JSONDecodeError, TypeError):
                     pass
             # Deserialize JSON list fields back to Python lists
-            for field in ("dancer_ids", "class_ids", "team_ids", "performance_order"):
+            for field in (
+                "dancer_ids",
+                "class_ids",
+                "team_ids",
+                "performance_order",
+                "schedule",
+            ):
                 val = item.get(field)
                 if isinstance(val, str):
                     try:
@@ -550,6 +562,9 @@ class DataStore:
             CREATE TABLE IF NOT EXISTS studios (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
+                location TEXT,
+                capacity INTEGER DEFAULT 20,
+                schedule TEXT,
                 notes TEXT,
                 extra TEXT
             )

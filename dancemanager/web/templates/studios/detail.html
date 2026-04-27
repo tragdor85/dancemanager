@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page }} - Dance Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .studio-info { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .studio-info h2 { margin-bottom: 20px; color: #333; }
+    .studio-info p { margin-bottom: 10px; color: #666; }
+    .schedule-section, .reserve-section { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .schedule-section h3, .reserve-section h3 { margin-bottom: 20px; color: #333; }
+    table { width: 100%; background: white; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f8f8; font-weight: 600; }
+    tr:hover { background: #f8f8f8; }
+    .actions { margin-bottom: 30px; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    .reserve-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .reserve-form .form-group { margin-bottom: 0; }
+    .reserve-form label { display: block; font-size: 12px; margin-bottom: 4px; color: #666; }
+    .reserve-form input, .reserve-form select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Studio Detail</h1>
+<div class="studio-info">
+    <h2>{{ studio.name }}</h2>
+    <p><strong>ID:</strong> {{ studio.id }}</p>
+    <p><strong>Location:</strong> {{ studio.location or 'Not set' }}</p>
+    <p><strong>Capacity:</strong> {{ studio.capacity }}</p>
+    {% if studio.equipment %}
+    <p><strong>Equipment:</strong> {{ studio.equipment | join(', ') }}</p>
+    {% endif %}
+</div>
+
+<div class="reserve-section">
+    <h3>Reserve a Time Slot</h3>
+    <form method="POST" action="/studios/{{ studio.id }}/reserve" class="reserve-form">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required>
+        </div>
+        <div class="form-group">
+            <label for="start_time">Start Time</label>
+            <input type="time" id="start_time" name="start_time" required>
+        </div>
+        <div class="form-group">
+            <label for="end_time">End Time</label>
+            <input type="time" id="end_time" name="end_time" required>
+        </div>
+        <div class="form-group">
+            <label for="reservation_type">Type</label>
+            <select id="reservation_type" name="reservation_type">
+                <option value="individual">Individual</option>
+                <option value="class">Class</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reservation_id">ID (class/dancer)</label>
+            <input type="text" id="reservation_id" name="reservation_id" placeholder="e.g. alice-smith">
+        </div>
+        <button type="submit" class="btn btn-primary">Reserve</button>
+    </form>
+</div>
+
+{% if schedule %}
+<div class="schedule-section">
+    <h3>Schedule</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Reserved By</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in schedule %}
+            <tr>
+                <td>{{ slot.date }}</td>
+                <td>{{ slot.start_time }}-{{ slot.end_time }}</td>
+                <td>{{ slot.reservation_type|title if slot.reservation_type else 'Unknown' }}</td>
+                <td>{{ slot.resolved_name or slot.reserved_by or 'Unknown' }}</td>
+                <td>
+                    <form method="POST" action="/studios/{{ studio.id }}/cancel" style="display:inline;">
+                        <input type="hidden" name="date" value="{{ slot.date }}">
+                        <input type="hidden" name="start_time" value="{{ slot.start_time }}">
+                        <input type="hidden" name="end_time" value="{{ slot.end_time }}">
+                        <input type="hidden" name="reservation_id" value="{{ slot.reserved_by or '' }}">
+                        <button type="submit" class="btn btn-warning" style="padding: 5px 10px; font-size: 12px;">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="schedule-section">
+    <h3>Schedule</h3>
+    <p style="color: #666;">No scheduled reservations.</p>
+</div>
+{% endif %}
+
+<div class="actions">
+    <a href="/studios/{{ studio.id }}/edit" class="btn btn-primary">Edit Studio</a>
+    <a href="/studios" class="btn btn-success">Back to List</a>
+    <button type="button" class="btn btn-danger" onclick="deleteItem('{{ studio.id }}')">Delete</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteItem(id) {
+    if (!confirm('Are you sure you want to delete this studio? This cannot be undone.')) {
+        return;
+    }
+    fetch('/studios/' + id, { method: 'DELETE' })
+        .then(function(response) {
+            window.location.href = '/studios';
+        })
+        .catch(function() {
+            alert('Error deleting studio. Please try again.');
+        });
+}
+</script>
+{% endblock %}
