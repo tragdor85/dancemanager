@@ -27,6 +27,58 @@
     .reserve-form .form-group { margin-bottom: 0; }
     .reserve-form label { display: block; font-size: 12px; margin-bottom: 4px; color: #666; }
     .reserve-form input, .reserve-form select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+
+    /* Time picker styles */
+    .time-picker-wrapper { position: relative; display: inline-block; min-width: 120px; }
+    .time-picker-input {
+        padding: 8px 30px 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        background: white;
+        min-width: 120px;
+    }
+    .time-picker-input:hover { border-color: #aaa; }
+    .time-picker-arrow {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #666;
+        font-size: 12px;
+    }
+    .time-picker-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        padding: 12px;
+        z-index: 1000;
+        min-width: 180px;
+    }
+    .time-picker-dropdown.open { display: block; }
+    .time-picker-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+    .time-picker-row:last-child { margin-bottom: 0; }
+    .time-picker-select {
+        padding: 6px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 60px;
+        background: white;
+    }
+    .time-picker-select:focus { outline: none; border-color: #007bff; }
+    .time-picker-label { font-size: 12px; color: #666; margin-right: 4px; }
 </style>
 {% endblock %}
 
@@ -50,12 +102,34 @@
             <input type="date" id="date" name="date" required>
         </div>
         <div class="form-group">
-            <label for="start_time">Start Time</label>
-            <input type="time" id="start_time" name="start_time" required>
+            <label for="start_time_display">Start Time</label>
+            <div class="time-picker-wrapper" data-time-input="start_time">
+                <input type="text" id="start_time_display" class="time-picker-input" placeholder="Select time" readonly>
+                <span class="time-picker-arrow">&#9660;</span>
+                <div class="time-picker-dropdown">
+                    <div class="time-picker-row">
+                        <select class="time-picker-select start-hour"></select>
+                        <span class="time-picker-label">:</span>
+                        <select class="time-picker-select start-minute"></select>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="start_time" name="start_time" required>
         </div>
         <div class="form-group">
-            <label for="end_time">End Time</label>
-            <input type="time" id="end_time" name="end_time" required>
+            <label for="end_time_display">End Time</label>
+            <div class="time-picker-wrapper" data-time-input="end_time">
+                <input type="text" id="end_time_display" class="time-picker-input" placeholder="Select time" readonly>
+                <span class="time-picker-arrow">&#9660;</span>
+                <div class="time-picker-dropdown">
+                    <div class="time-picker-row">
+                        <select class="time-picker-select end-hour"></select>
+                        <span class="time-picker-label">:</span>
+                        <select class="time-picker-select end-minute"></select>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="end_time" name="end_time" required>
         </div>
         <div class="form-group">
             <label for="reservation_type">Type</label>
@@ -89,7 +163,7 @@
             {% for slot in schedule %}
             <tr>
                 <td>{{ slot.date }}</td>
-                <td>{{ slot.start_time }}-{{ slot.end_time }}</td>
+                <td>{{ slot.formatted_start_time }} - {{ slot.formatted_end_time }}</td>
                 <td>{{ slot.reservation_type|title if slot.reservation_type else 'Unknown' }}</td>
                 <td>{{ slot.resolved_name or slot.reserved_by or 'Unknown' }}</td>
                 <td>
@@ -134,5 +208,90 @@ function deleteItem(id) {
             alert('Error deleting studio. Please try again.');
         });
 }
+
+// Time picker functionality
+document.addEventListener('DOMContentLoaded', function() {
+    function initTimePicker(wrapper) {
+        var hiddenInput = document.getElementById(wrapper.dataset.timeInput);
+        var displayInput = wrapper.querySelector('.time-picker-input');
+        var dropdown = wrapper.querySelector('.time-picker-dropdown');
+        var selects = wrapper.querySelectorAll('.time-picker-select');
+        var hourSelect = selects[0];
+        var minuteSelect = selects[1];
+
+        // Populate hours (1-12)
+        for (var i = 1; i <= 12; i++) {
+            var opt = document.createElement('option');
+            opt.value = i < 10 ? '0' + i : i.toString();
+            opt.textContent = i.toString();
+            hourSelect.appendChild(opt);
+        }
+
+        // Populate minutes (00-55, every 5 min)
+        for (var m = 0; m < 60; m += 5) {
+            var opt = document.createElement('option');
+            opt.value = m < 10 ? '0' + m : m.toString();
+            opt.textContent = m < 10 ? '0' + m : m.toString();
+            minuteSelect.appendChild(opt);
+        }
+
+        // Set default time (9:00 AM for start, 10:00 AM for end)
+        if (hiddenInput.id === 'start_time') {
+            hourSelect.value = '09';
+            minuteSelect.value = '00';
+        } else {
+            hourSelect.value = '10';
+            minuteSelect.value = '00';
+        }
+
+        function updateTimeDisplay() {
+            var h = parseInt(hourSelect.value);
+            var m = minuteSelect.value;
+            var period = h < 12 ? 'a.m.' : 'p.m.';
+            var displayH = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+            displayInput.value = displayH + ':' + m + ' ' + period;
+
+            // Update hidden input with 24-hour format for form submission
+            var hour24 = h >= 12 ? h + 12 : (h === 12 ? 0 : h);
+            hiddenInput.value = (hour24 < 10 ? '0' + hour24 : hour24) + ':' + m;
+        }
+
+        // Initialize display
+        updateTimeDisplay();
+
+        // Event listeners
+        hourSelect.addEventListener('change', updateTimeDisplay);
+        minuteSelect.addEventListener('change', updateTimeDisplay);
+
+        // Toggle dropdown on input click
+        displayInput.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = dropdown.classList.contains('open');
+            closeAllPickers();
+            if (!isOpen) {
+                dropdown.classList.add('open');
+            }
+        });
+    }
+
+    // Initialize all time pickers
+    var wrappers = document.querySelectorAll('.time-picker-wrapper');
+    wrappers.forEach(function(wrapper) {
+        initTimePicker(wrapper);
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.time-picker-wrapper')) {
+            closeAllPickers();
+        }
+    });
+
+    function closeAllPickers() {
+        document.querySelectorAll('.time-picker-dropdown').forEach(function(d) {
+            d.classList.remove('open');
+        });
+    }
+});
 </script>
 {% endblock %}

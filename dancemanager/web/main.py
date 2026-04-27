@@ -26,6 +26,21 @@ from dancemanager.studios import (
     title,
 )
 
+
+def _format_time_12h(time_str: str) -> str:
+    """Convert HH:MM military time to standard 12-hour format (e.g. '2:30 p.m.' )."""
+    if not time_str or ":" not in time_str:
+        return time_str or ""
+    parts = time_str.split(":")
+    hour = int(parts[0])
+    minute = int(parts[1])
+    period = "a.m." if hour < 12 else "p.m."
+    display_hour = hour % 12
+    if display_hour == 0:
+        display_hour = 12
+    return f"{display_hour}:{minute:02d} {period}"
+
+
 app = FastAPI()
 router = APIRouter()
 
@@ -1310,6 +1325,17 @@ async def studio_detail(
                     slot["resolved_name"] = reserved_by
         else:
             slot["resolved_name"] = reserved_by or "Unknown"
+
+        start_time = slot.get("start_time", "")
+        end_time = slot.get("end_time", "")
+        if start_time and ":" in start_time:
+            slot["formatted_start_time"] = _format_time_12h(start_time)
+        else:
+            slot["formatted_start_time"] = start_time or ""
+        if end_time and ":" in end_time:
+            slot["formatted_end_time"] = _format_time_12h(end_time)
+        else:
+            slot["formatted_end_time"] = end_time or ""
 
     return templates.TemplateResponse(
         request,
