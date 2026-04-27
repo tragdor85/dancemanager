@@ -119,7 +119,7 @@ def csv_import_classes(store, filepath):
             store.execute(
                 "INSERT INTO classes (id, name, team_ids, dancer_ids, instructor_id, notes) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (class_id, class_name, "[]", "[]", None, ""),
+                (class_id, class_name.title(), "[]", "[]", None, ""),
             )
             summary["created"]["classes"] += 1
             header_mode = False
@@ -199,7 +199,7 @@ def csv_import_teams(store, filepath):
         store.execute(
             "INSERT INTO dancers (id, name, team_id, class_ids, notes) "
             "VALUES (?, ?, ?, ?, ?)",
-            (dancer_id, dancer_name, None, "[]", ""),
+            (dancer_id, dancer_name.title(), None, "[]", ""),
         )
         summary["created"]["dancers"] += 1
 
@@ -236,7 +236,7 @@ def csv_import_dancers(store, filepath):
             store.execute(
                 "INSERT INTO dancers (id, name, team_id, class_ids, notes) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (dancer_id, name, team_name if team_name else None, "[]", ""),
+                (dancer_id, name.title(), team_name if team_name else None, "[]", ""),
             )
             summary["created"] += 1
 

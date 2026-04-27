@@ -32,7 +32,7 @@ def add(ctx, name):
 
     store.execute(
         "INSERT OR REPLACE INTO instructors (id, name, notes) " "VALUES (?, ?, ?)",
-        (instructor_id, name, ""),
+        (instructor_id, name.title(), ""),
     )
 
     store.save()

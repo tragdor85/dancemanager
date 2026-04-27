@@ -38,7 +38,7 @@ def add(ctx, name):
     store.execute(
         "INSERT INTO recitals (id, name, performance_order, notes) "
         "VALUES (?, ?, ?, ?)",
-        (recital_id, name, "[]", ""),
+        (recital_id, name.title(), "[]", ""),
     )
 
     store.save()
@@ -247,7 +247,9 @@ def generate_schedule(ctx, recital_id):
     store.execute(
         "UPDATE recitals SET performance_order = ? WHERE id = ?",
         (
-            json.dumps([{"dance_id": did, "position": i + 1} for i, did in enumerate(result)]),
+            json.dumps(
+                [{"dance_id": did, "position": i + 1} for i, did in enumerate(result)]
+            ),
             recital_id,
         ),
     )

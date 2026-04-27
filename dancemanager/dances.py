@@ -3,6 +3,7 @@
 Provides commands to add, list, show, remove, and manage dances.
 """
 
+import json
 from typing import Optional
 
 import click
@@ -21,9 +22,15 @@ def dances():
 @click.argument("name")
 @click.argument("song_name")
 @click.option("--instructor", default=None, help="Instructor by name.")
+@click.option(
+    "--team-ids",
+    "team_ids_str",
+    default="",
+    help="Space-separated team IDs to include.",
+)
 @click.pass_context
-def add(ctx, name, song_name, instructor):
-    """Create a dance with a song, optionally assigning an instructor."""
+def add(ctx, name, song_name, instructor, team_ids_str):
+    """Create a dance with a song, optionally assigning an instructor and teams."""
     store = get_store()
     dances_list = store.get_collection("dances")
 
@@ -32,10 +39,23 @@ def add(ctx, name, song_name, instructor):
         click.echo(f"Dance already exists: {name}")
         return
 
+    team_ids = (
+        [t.strip() for t in team_ids_str.split() if t.strip()] if team_ids_str else []
+    )
+
     store.execute(
-        "INSERT OR REPLACE INTO dances (id, name, song_name, instructor_id, notes) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (dance_id, name, song_name, None, ""),
+        "INSERT OR REPLACE INTO dances "
+        "(id, name, song_name, instructor_id, dancer_ids, team_ids, notes) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            dance_id,
+            name.title(),
+            song_name,
+            None,
+            json.dumps([]),
+            json.dumps(team_ids),
+            "",
+        ),
     )
 
     if instructor:

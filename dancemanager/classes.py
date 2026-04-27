@@ -38,7 +38,7 @@ def add(ctx, name, instructor):
     store.execute(
         "INSERT OR REPLACE INTO classes (id, name, instructor_id, notes) "
         "VALUES (?, ?, ?, ?)",
-        (class_id, name, None, ""),
+        (class_id, name.title(), None, ""),
     )
 
     if instructor:

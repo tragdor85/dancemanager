@@ -824,6 +824,7 @@ async def dances_list(request: Request, store: DataStore = Depends(store_depende
 async def dance_new(request: Request, store: DataStore = Depends(store_dependency)):
     instructors = list(store.get_collection("instructors").values())
     dancers = list(store.get_collection("dancers").values())
+    teams = list(store.get_collection("teams").values())
     return templates.TemplateResponse(
         request,
         "dances/form.html",
@@ -832,6 +833,7 @@ async def dance_new(request: Request, store: DataStore = Depends(store_dependenc
             "page": "dances",
             "instructors": instructors,
             "dancers": dancers,
+            "teams": teams,
             "dance": None,
         },
     )
@@ -876,6 +878,7 @@ async def dance_edit(
 
     instructors = list(store.get_collection("instructors").values())
     dancers = list(store.get_collection("dancers").values())
+    teams = list(store.get_collection("teams").values())
     return templates.TemplateResponse(
         request,
         "dances/form.html",
@@ -884,6 +887,7 @@ async def dance_edit(
             "page": "dances",
             "instructors": instructors,
             "dancers": dancers,
+            "teams": teams,
             "dance": dance,
         },
     )
@@ -895,12 +899,11 @@ async def dance_create(request: Request, store: DataStore = Depends(store_depend
     name = form.get("name")
     song_name = form.get("song_name")
     instructor_id = form.get("instructor_id")
-    dancer_ids = form.get("dancer_ids", "")
+    dancer_ids_list = form.getlist("dancer_ids")
+    team_ids_list = form.getlist("team_ids")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    dancer_ids_list = [d.strip() for d in dancer_ids.split(",") if d.strip()]
 
     dance_id = make_dance_id(name)
     dance_data = {
@@ -908,7 +911,8 @@ async def dance_create(request: Request, store: DataStore = Depends(store_depend
         "name": name,
         "song_name": song_name,
         "instructor_id": instructor_id if instructor_id else None,
-        "dancer_ids": dancer_ids_list if dancer_ids_list else [],
+        "dancer_ids": dancer_ids_list,
+        "team_ids": team_ids_list,
         "notes": "",
     }
 
@@ -924,20 +928,20 @@ async def dance_update(
     name = form.get("name")
     song_name = form.get("song_name")
     instructor_id = form.get("instructor_id")
-    dancer_ids = form.get("dancer_ids", "")
+    dancer_ids_list = form.getlist("dancer_ids")
+    team_ids_list = form.getlist("team_ids")
     notes = form.get("notes", "")
 
     if not name:
         return HTMLResponse("Name is required", status_code=400)
-
-    dancer_ids_list = [d.strip() for d in dancer_ids.split(",") if d.strip()]
 
     dance_data = {
         "id": dance_id,
         "name": name,
         "song_name": song_name,
         "instructor_id": instructor_id if instructor_id else None,
-        "dancer_ids": dancer_ids_list if dancer_ids_list else [],
+        "dancer_ids": dancer_ids_list,
+        "team_ids": team_ids_list,
         "notes": notes,
     }
 

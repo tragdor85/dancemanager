@@ -129,7 +129,16 @@ class DataStore:
         # Provide defaults for required fields to handle edge cases
         if "name" in value:
             columns.append("name")
-            params.append(value["name"])
+            name_val = value["name"]
+            if collection in (
+                "classes",
+                "dancers",
+                "instructors",
+                "dances",
+                "recitals",
+            ):
+                name_val = name_val.title()
+            params.append(name_val)
         else:
             columns.append("name")
             params.append("")

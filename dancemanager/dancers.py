@@ -27,7 +27,7 @@ def add(ctx, name, team):
     store.execute(
         "INSERT OR REPLACE INTO dancers (id, name, team_id, class_ids, notes) "
         "VALUES (?, ?, ?, ?, ?)",
-        (make_dancer_id(name), name, None, json.dumps([]), ""),
+        (make_dancer_id(name), name.title(), None, json.dumps([]), ""),
     )
 
     if team:

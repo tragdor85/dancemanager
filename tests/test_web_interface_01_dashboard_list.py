@@ -437,3 +437,42 @@ class TestListPages:
         resp = client.get("/dancers")
         assert resp.status_code == 200
         # Bob has no class_ids so should show 0 classes
+
+
+# ──────────────────────────────────────────────────────────────────────
+# 3. Dashboard stat card links
+# ──────────────────────────────────────────────────────────────────────
+
+
+class TestDashboardStatLinks:
+    """Tests that dashboard stat cards link to their list pages."""
+
+    def test_dancers_stat_links_to_dancers_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/dancers"' in resp.text
+
+    def test_teams_stat_links_to_teams_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/teams"' in resp.text
+
+    def test_classes_stat_links_to_classes_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/classes"' in resp.text
+
+    def test_instructors_stat_links_to_instructors_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/instructors"' in resp.text
+
+    def test_dances_stat_links_to_dances_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/dances"' in resp.text
+
+    def test_recitals_stat_links_to_recitals_list(self):
+        client, _ = make_test_client()
+        resp = client.get("/")
+        assert 'href="/recitals"' in resp.text

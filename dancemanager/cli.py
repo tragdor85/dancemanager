@@ -42,7 +42,7 @@ def migrate():
 
 @cli.command()
 @click.option(
-    "--host", default="localhost", help="Host to bind to (default: localhost)"
+    "--host", default="0.0.0.0", help="Host to bind to (default: 0.0.0.0)"
 )
 @click.option(
     "--port", default=8000, type=int, help="Port to listen on (default: 8000)"

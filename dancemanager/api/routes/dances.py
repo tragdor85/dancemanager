@@ -90,3 +90,36 @@ def api_dance_remove_dancer(dance_id: str, dancer_id: str):
         dance["dancer_ids"].remove(dancer_id)
         store.set("dances", dance_id, dance)
     return {"message": f"Dancer {dancer_id} removed from dance {dance_id}"}
+
+
+@router.post("/api/dances/{dance_id}/teams/add")
+def api_dance_add_team(dance_id: str, team_id: str):
+    """Add a team to a dance."""
+    store = get_store()
+    dance = store.get("dances", dance_id)
+    if not dance:
+        raise HTTPException(status_code=404, detail="Dance not found")
+    team = store.get("teams", team_id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    current_team_ids = list(dance.get("team_ids", []))
+    if team_id not in current_team_ids:
+        current_team_ids.append(team_id)
+        dance["team_ids"] = current_team_ids
+        store.set("dances", dance_id, dance)
+    return {"message": f"Team {team_id} added to dance {dance_id}"}
+
+
+@router.post("/api/dances/{dance_id}/teams/remove")
+def api_dance_remove_team(dance_id: str, team_id: str):
+    """Remove a team from a dance."""
+    store = get_store()
+    dance = store.get("dances", dance_id)
+    if not dance:
+        raise HTTPException(status_code=404, detail="Dance not found")
+    current_team_ids = list(dance.get("team_ids", []))
+    if team_id in current_team_ids:
+        current_team_ids.remove(team_id)
+        dance["team_ids"] = current_team_ids
+        store.set("dances", dance_id, dance)
+    return {"message": f"Team {team_id} removed from dance {dance_id}"}

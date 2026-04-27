@@ -108,12 +108,21 @@ class DanceCreate(BaseModel):
     name: str = Field(..., min_length=1, description="Dance name")
     song_name: str = Field(..., min_length=1, description="Song name")
     instructor_id: Optional[str] = None
+    dancer_ids: List[str] = Field(default=[], description="Individual dancer IDs")
+    team_ids: List[str] = Field(
+        default=[], description="Team IDs whose members are included"
+    )
     notes: str = Field(default="", description="Optional notes")
 
 
 class DanceUpdate(BaseModel):
     name: Optional[str] = Field(default=None, description="Dance name")
     song_name: Optional[str] = Field(default=None, description="Song name")
+    instructor_id: Optional[str] = Field(default=None, description="Instructor ID")
+    dancer_ids: Optional[List[str]] = Field(
+        default=None, description="Individual dancer IDs"
+    )
+    team_ids: Optional[List[str]] = Field(default=None, description="Team IDs")
     notes: Optional[str] = Field(default=None, description="Notes")
 
 
@@ -123,6 +132,7 @@ class DanceResponse(BaseModel):
     song_name: str
     instructor_id: Optional[str] = None
     dancer_ids: List[str] = []
+    team_ids: List[str] = []
     notes: str = ""
 
 

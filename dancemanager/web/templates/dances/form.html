@@ -1,76 +1,183 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ page }} - Dance Manager</title>
+{% extends "base.html" %}
+
+{% block title %}{{ page }} - Dance Manager{% endblock %}
+
+{% block extra_css %}
 <style>
- * { margin: 0; padding: 0; box-sizing: border-box; }
- body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
- .container { max-width: 800px; margin: 0 auto; }
- nav { background: #333; color: white; padding: 15px; margin-bottom: 20px; }
- nav a { color: white; text-decoration: none; margin-right: 20px; }
- nav a:hover { text-decoration: underline; }
- h1 { color: #333; margin-bottom: 20px; }
- .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
- .form-group { margin-bottom: 20px; }
- .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
- .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
- .btn-group { display: flex; gap: 10px; }
- .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; }
- .btn-primary { background: #007bff; color: white; }
- .btn-primary:hover { background: #0056b3; }
- .btn-success { background: #28a745; color: white; }
- .btn-success:hover { background: #1e7e34; }
- .btn-secondary { background: #6c757d; color: white; }
- .btn-secondary:hover { background: #5a6268; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+    .form-group input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    .form-group select[multiple] { width: 100%; height: 150px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    .form-hint { font-size: 12px; color: #666; margin-top: 4px; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; cursor: pointer; border: none; font-size: 14px; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-secondary:hover { background: #5a6268; }
 </style>
-</head>
-<body>
-<div class="container">
-    <nav>
-        <a href="/">Home</a>
-        <a href="/dancers">Dancers</a>
-        <a href="/teams">Teams</a>
-        <a href="/classes">Classes</a>
-        <a href="/instructors">Instructors</a>
-        <a href="/dances">Dances</a>
-        <a href="/recitals">Recitals</a>
-    </nav>
-    <h1>{{ page }} Form</h1>
-    <div class="form-container">
-          <form method="POST" action="{% if dance %}/dances/{{ dance.id }}{% else %}/dances{% endif %}">
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="{{ dance.name }}" required>
-            </div>
-            <div class="form-group">
-                <label for="song_name">Song Name:</label>
-                <input type="text" id="song_name" name="song_name" value="{{ dance.song_name }}">
-            </div>
-            <div class="form-group">
-                <label for="instructor_id">Instructor:</label>
-                <select id="instructor_id" name="instructor_id">
-                    <option value="">Select Instructor</option>
-                    {% for instructor in instructors %}
-                    <option value="{{ instructor.id }}" {% if instructor.id == dance.instructor_id %}selected{% endif %}>{{ instructor.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="dancer_ids">Dancers:</label>
-                <input type="text" id="dancer_ids" name="dancer_ids" value="{{ dance.dancer_ids }}">
-            </div>
-            <div class="form-group">
-                <label for="notes">Notes:</label>
-                <textarea id="notes" name="notes" rows="4">{{ dance.notes }}</textarea>
-            </div>
-            <div class="btn-group">
-                <a href="/dances" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Save Dance</button>
-            </div>
-        </form>
-    </div>
+{% endblock %}
+
+{% block content %}
+<h1>{{ page }} Form</h1>
+<div class="form-container">
+    <form method="POST" action="{% if dance %}/dances/{{ dance.id }}{% else %}/dances{% endif %}">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ dance.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="song_name">Song Name:</label>
+            <input type="text" id="song_name" name="song_name" value="{{ dance.song_name }}">
+        </div>
+        <div class="form-group">
+            <label for="instructor_id">Instructor:</label>
+            <select id="instructor_id" name="instructor_id">
+                <option value="">Select Instructor</option>
+                {% for instructor in instructors %}
+                <option value="{{ instructor.id }}" {% if dance and instructor.id == dance.instructor_id %}selected{% endif %}>{{ instructor.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="team_search">Teams:</label>
+            <input type="text" id="team_search" placeholder="Search teams..." oninput="filterOptions('team')">
+            <select id="team_ids" name="team_ids" multiple style="height: 150px;">
+                {% for team in teams %}
+                <option value="{{ team.id }}" class="team-option" {% if dance and team.id in (dance.team_ids or []) %}selected{% endif %}>{{ team.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-hint">Select teams; all team members will be included in this dance.</div>
+        </div>
+        <div class="form-group">
+            <label for="dancer_search">Individual Dancers:</label>
+            <input type="text" id="dancer_search" placeholder="Search dancers..." oninput="filterOptions('dancer')">
+            <select id="dancer_ids" name="dancer_ids" multiple style="height: 150px;">
+                {% for dancer in dancers %}
+                <option value="{{ dancer.id }}" class="dancer-option" data-team-id="{{ dancer.team_id or '' }}" {% if dance and dancer.id in (dance.dancer_ids or []) %}selected{% endif %}>{{ dancer.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-hint">Select individual dancers not covered by a team. Team members are hidden when their team is selected.</div>
+        </div>
+        <div class="form-group">
+            <label for="notes">Notes:</label>
+            <textarea id="notes" name="notes" rows="4">{{ dance.notes }}</textarea>
+        </div>
+        <div class="btn-group">
+            <a href="/dances" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Dance</button>
+        </div>
+    </form>
 </div>
-</body>
-</html>
+
+<script>
+// Store original option data so we can rebuild selects on filter/change.
+// This is needed because style.display doesn't work reliably on <option> elements.
+
+const _originalTeamOptions = [];
+const _originalDancerOptions = [];
+
+function captureOriginalOptions() {
+    document.querySelectorAll('.team-option').forEach(opt => {
+        _originalTeamOptions.push({
+            value: opt.value,
+            text: opt.textContent,
+            selected: opt.selected,
+            teamId: '',
+        });
+    });
+    document.querySelectorAll('.dancer-option').forEach(opt => {
+        _originalDancerOptions.push({
+            value: opt.value,
+            text: opt.textContent,
+            selected: opt.selected,
+            teamId: opt.getAttribute('data-team-id') || '',
+        });
+    });
+}
+
+function rebuildSelect(selectId, options, filterFn) {
+    const select = document.getElementById(selectId);
+    // Remember current selections before rebuilding
+    const currentlySelected = new Set();
+    for (const opt of select.selectedOptions) {
+        currentlySelected.add(opt.value);
+    }
+
+    select.innerHTML = '';
+    options.forEach(item => {
+        if (!filterFn || filterFn(item)) {
+            const el = document.createElement('option');
+            el.value = item.value;
+            el.textContent = item.text;
+            if (item.teamId) el.setAttribute('data-team-id', item.teamId);
+            if (currentlySelected.has(item.value)) el.selected = true;
+            select.appendChild(el);
+        }
+    });
+}
+
+function getTeamFilter() {
+    const selectedTeamIds = Array.from(document.getElementById('team_ids').selectedOptions)
+        .map(opt => opt.value);
+    return function (item) {
+        // For dancers: hide if their team is selected
+        if (item.teamId && selectedTeamIds.includes(item.teamId)) {
+            return false;
+        }
+        return true;
+    };
+}
+
+function filterOptions(type) {
+    const searchInput = document.getElementById(`${type}_search`);
+    const query = searchInput.value.toLowerCase();
+
+    if (type === 'team') {
+        rebuildSelect('team_ids', _originalTeamOptions, item => {
+            return item.text.toLowerCase().includes(query);
+        });
+    } else if (type === 'dancer') {
+        const teamFilter = getTeamFilter();
+        rebuildSelect('dancer_ids', _originalDancerOptions, item => {
+            return teamFilter(item) && item.text.toLowerCase().includes(query);
+        });
+    }
+}
+
+function updateDancerVisibility() {
+    const searchInput = document.getElementById('dancer_search');
+    const query = searchInput.value.toLowerCase();
+
+    rebuildSelect('dancer_ids', _originalDancerOptions, item => {
+        // Hide dancers whose team is selected
+        if (item.teamId) {
+            const selectedTeamIds = Array.from(document.getElementById('team_ids').selectedOptions)
+                .map(opt => opt.value);
+            if (selectedTeamIds.includes(item.teamId)) {
+                return false;
+            }
+        }
+        // Also respect search filter
+        if (query && !item.text.toLowerCase().includes(query)) {
+            return false;
+        }
+        return true;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    captureOriginalOptions();
+
+    const teamSelect = document.getElementById('team_ids');
+    if (teamSelect) {
+        teamSelect.addEventListener('change', updateDancerVisibility);
+    }
+});
+</script>
+{% endblock %}
